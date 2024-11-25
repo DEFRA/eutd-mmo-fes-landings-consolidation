@@ -21,7 +21,7 @@ resources:
 stages:
 - stage: BuildAppAndCodeCoverage
   pool:
-    name: DEFRA-COMMON-ubuntu2204-SSV3
+    name: DEFRA-COMMON-ubuntu2204-SSV5
   jobs:
   - job: TestCodeCoverage
     steps:
@@ -103,7 +103,7 @@ stages:
     dependsOn: BuildAndArtifactAppImage
     condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'PullRequest')))
     pool:
-      name: DEFRA-COMMON-ubuntu2204-SSV3
+      name: DEFRA-COMMON-ubuntu2204-SSV5
     steps:
     - task: DownloadPipelineArtifact@2
       displayName: Download Docker image
