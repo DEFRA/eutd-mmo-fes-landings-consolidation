@@ -80,6 +80,12 @@ export interface Catch {
   landingDataExpectedDate?: string;
   landingDataEndDate?: string;
   isLegallyDue?: boolean;
+  vesselRiskScore?: number;
+  exporterRiskScore?: number;
+  speciesRiskScore?: number;
+  threshold?: number;
+  riskScore?: number;
+  isSpeciesRiskEnabled?: boolean;
 }
 
 export interface Product {
@@ -232,7 +238,13 @@ const CatchSchema = new Schema({
   dataEverExpected:         { type: Boolean,required: false },
   landingDataExpectedDate:  { type: String, required: false },
   landingDataEndDate:       { type: String, required: false },
-  isLegallyDue:             { type: Boolean,required: false }
+  isLegallyDue:             { type: Boolean,required: false },
+  vesselRiskScore:          { type: Number, required: false },
+  exporterRiskScore:        { type: Number, required: false },
+  speciesRiskScore:         { type: Number, required: false },
+  threshold:                { type: Number, required: false },
+  riskScore:                { type: Number, required: false },
+  isSpeciesRiskEnabled:    { type: Boolean, required: false }
 }, { _id : false } );
 
 const ProductSchema = new Schema({

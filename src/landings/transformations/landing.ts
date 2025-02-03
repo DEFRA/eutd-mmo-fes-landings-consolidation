@@ -24,9 +24,10 @@ export const transformLandings = (landings: ILanding[]): IConsolidateLanding[] =
         .map((_items: ILandingAggregatedItemBreakdown[], species: string) => {
           for (const landing of _items) {
             const factor = landing.factor ? landing.factor : 1;
+            const isEstimate = !(landing.source && landing.source === LandingSources.LandingDeclaration)
             return {
               species,
-              isEstimate: landing.source && landing.source === LandingSources.LandingDeclaration ? false : true,
+              isEstimate,
               landedWeight: factor * landing.weight
             }
           }

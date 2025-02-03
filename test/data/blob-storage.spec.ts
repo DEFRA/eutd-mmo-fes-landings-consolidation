@@ -1,7 +1,9 @@
-import { isEmpty } from 'lodash';
 import { IVessel } from "mmo-shared-reference-data";
-import { getConversionFactorsData, getExporterBehaviourData, getSpeciesAliasesFromBlob, getVesselDateFromBlob } from "../../src/data/blob-storage";
+import * as blob from "../../src/data/blob-storage";
 import logger from '../../src/logger';
+import { BlobClient, BlobServiceClient, ContainerClient } from '@azure/storage-blob';
+jest.mock("@azure/storage-blob");
+import { Readable } from "stream";
 
 const vesselData: IVessel[] = [{
   fishingVesselName: 'MARLENA',
@@ -52,142 +54,92 @@ const vesselData: IVessel[] = [{
   licenceHolderName: "MR  SIMON COLL"
 }];
 
-jest.mock('azure-storage', () => ({
-  ...jest.requireActual('azure-storage'),
-  createBlobService: (connectionString: string) => {
-    if (isEmpty(connectionString)) {
-      throw new Error('connection string can not be empty')
-    }
-
-    return {
-      getBlobToText: jest.fn().mockImplementation((containerName, blobName, cb) => {
-        if (connectionString === 'blob-storage-connection-error') {
-          return cb(new Error('VesselsMockError'));
-        }
-
-        if (connectionString === 'blob-storage-connection-error-2') {
-          return cb(null, '[{ "viewName": "Dummy", "blobName": "vessels.json" }]');
-        }
-
-        if (blobName === 'Notification.json') {
-          return cb(null, '[{ "viewName": "VesselAndLicenceData", "blobName": "vessels.json" }]');
-        }
-
-        if (blobName === 'exporter_behaviour.csv') {
-          return cb(null, 'accountId,contactId,name,score\nID1,,Exporter 1,0.5\nID2,,Exporter 2,0.75');
-        }
-
-        if (blobName === 'speciesmismatch.json') {
-          return cb(null, JSON.stringify([{
-            speciesName: "Squid",
-            speciesCode: "SQC",
-            speciesAlias: ["SQR", "SQZ", "SQI"]
-          },]));
-        }
-
-        if (blobName === 'conversionfactors.csv') {
-          return cb(null, 'species,state,presentation,toLiveWeightFactor,quotaStatus,riskScore\nALB,FRE,GUT,1.11,quota,1');
-        }
-
-        return cb(null, JSON.stringify(vesselData));
-      })
-    }
-  }
-}));
-
-describe('when getting vessel data from blob', () => {
-
-  it('will get vessel data', async () => {
-    const results = await getVesselDateFromBlob('blob-storage-connection-string');
-    expect(results).toHaveLength(3);
-  });
-
-  it('will throw an error when the blob store is unable to get vessel details', async () => {
-    await expect(getVesselDateFromBlob('blob-storage-connection-error')).rejects.toThrow();
-  });
-
-  it('will throw an error when notification json can not be found', async () => {
-    await expect(getVesselDateFromBlob('blob-storage-connection-error-2')).rejects.toThrow();
-  });
-
-  it('will throw an error when no connection string is provided', async () => {
-    await expect(getVesselDateFromBlob('')).rejects.toThrow();
-  });
-
-});
-
-describe('getExporterBehaviourData', () => {
-
-  let mockLogError: jest.SpyInstance;
-
-  beforeEach(() => {
-    mockLogError = jest.spyOn(logger, 'error');
-  });
-
-  afterEach(() => {
-    mockLogError.mockRestore();
-  });
-
-  it('will log and rethrow any errors', async () => {
-    const error = new Error('connection string can not be empty');
-
-    await expect(getExporterBehaviourData('')).rejects.toThrow(error);
-
-    expect(mockLogError).toHaveBeenNthCalledWith(1, error);
-    expect(mockLogError).toHaveBeenNthCalledWith(2, 'Cannot read remote file exporter_behaviour.csv from container exporterbehaviour')
-  });
-
-  it('will return exporter behaviour data', async () => {
-    const expected = [
-      { accountId: 'ID1', name: 'Exporter 1', score: 0.5 },
-      { accountId: 'ID2', name: 'Exporter 2', score: 0.75 }
-    ]
-
-    const res = await getExporterBehaviourData('connString');
-
-    expect(res).toStrictEqual(expected);
-  });
-
-});
-
-describe('getSpeciesAliasesFromBlob', () => {
-  let mockLogError: jest.SpyInstance;
+describe('When getting vessels from a blob storage', () => {
+  let mockLogError;
+  let mockReadToText;
+  let mockBlobClient;
+  let mockLoggerInfo;
 
   const container = 'speciesmismatch';
   const file = 'speciesmismatch.json';
 
   beforeEach(() => {
-    mockLogError = jest.spyOn(logger, 'error');
+      mockLogError = jest.spyOn(logger, 'error');
+      mockReadToText = jest.spyOn(blob, 'readToText');
+      mockLoggerInfo = jest.spyOn(logger, 'info');
+
+      mockBlobClient = jest.spyOn(BlobServiceClient, 'fromConnectionString');
+      const containerObj = new ContainerClient(container);
+      containerObj.getBlobClient = () => new BlobClient(file);
+      mockBlobClient.mockImplementation(() => ({
+          getContainerClient: () => containerObj,
+      }));
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+      jest.restoreAllMocks();
+  });
+  
+  it('should return a list of vessels with valid connection string', async () => {
+      mockReadToText
+          .mockReturnValueOnce('[{ "viewName": "VesselAndLicenceData", "blobName": "vessels.json" }]')
+          .mockReturnValueOnce(JSON.stringify(vesselData));
+
+      const result = await blob.getVesselDateFromBlob('connString');
+
+      expect(mockLoggerInfo.mock.calls[0][0]).toEqual('connecting to blob storage');
+      expect(mockLoggerInfo.mock.calls[1][0]).toEqual('reading notification file');
+      expect(mockLoggerInfo.mock.calls[2][0]).toEqual('parsing notification file to json');
+      expect(mockLoggerInfo.mock.calls[3][0]).toEqual('searching notification json');
+      expect(mockLoggerInfo.mock.calls[4][0]).toEqual('Reading vessel data from');
+      expect(result.length).toEqual(3);
   });
 
-  it('will log and rethrow any errors', async () => {
-    const error = new Error('connection string can not be empty');
+  it('should throw an error if vessels key is not defined in notification JSON', async () => {
+      mockReadToText.mockReturnValueOnce('[{ "viewName": "other", "blobName": "vessels.json" }]');
 
-    await expect(getSpeciesAliasesFromBlob('')).rejects.toThrow('Error: connection string can not be empty');
+      await expect(blob.getVesselDateFromBlob('connString')).rejects.toThrow('Cannot find vessel data in notification json, looking for key VesselAndLicenceData');
 
-    expect(mockLogError).toHaveBeenNthCalledWith(1, error);
-    expect(mockLogError).toHaveBeenNthCalledWith(2, `Cannot read remote file ${file} from container ${container}`);
+      expect(mockLoggerInfo.mock.calls[0][0]).toEqual('connecting to blob storage');
+      expect(mockLoggerInfo.mock.calls[1][0]).toEqual('reading notification file');
+      expect(mockLoggerInfo.mock.calls[2][0]).toEqual('parsing notification file to json');
+      expect(mockLoggerInfo.mock.calls[3][0]).toEqual('searching notification json');
+      expect(mockLoggerInfo.mock.calls[4]).toEqual(undefined);
   });
 
-  it('will return species aliases data', async () => {
-    const res = await getSpeciesAliasesFromBlob('connString');
-    expect(res).toStrictEqual({ "SQC": ["SQR", "SQZ", "SQI"] });
+  it('should throw an error if an error is thrown in the try block', async () => {
+      const error = new Error('something went wrong')
+      mockReadToText.mockRejectedValue(error);
+
+      await expect(blob.getVesselDateFromBlob('connString')).rejects.toThrow('Error: something went wrong');
+
+      expect(mockLoggerInfo.mock.calls[0][0]).toEqual('connecting to blob storage');
+      expect(mockLoggerInfo.mock.calls[1][0]).toEqual('reading notification file');
+
+      expect(mockLogError.mock.calls[0][0]).toEqual(error);
+      expect(mockLogError.mock.calls[1][0]).toEqual('Cannot read remote file Notification.json from container catchcertdata');
   });
 });
 
-describe('getConversionFactorsData', () => {
+describe('getExporterBehaviourData', () => {
 
   let mockLogError;
+  let mockReadToText;
+  let mockBlobClient;
 
-  const container = 'conversionfactors';
-  const file = 'conversionfactors.csv'
+  const container = "exporterbehaviour";
+  const file = "exporter_behaviour.csv";
 
   beforeEach(() => {
       mockLogError = jest.spyOn(logger, 'error');
+      mockReadToText = jest.spyOn(blob, 'readToText');
+
+      mockBlobClient = jest.spyOn(BlobServiceClient, 'fromConnectionString');
+      const containerObj = new ContainerClient(container);
+      containerObj.getBlobClient = () => new BlobClient(file);
+      mockBlobClient.mockImplementation(() => ({
+          getContainerClient: () => containerObj,
+      }));
   });
 
   afterEach(() => {
@@ -195,26 +147,146 @@ describe('getConversionFactorsData', () => {
   });
 
   it('will log and rethrow any errors', async () => {
-      const error = new Error('connection string can not be empty');
+      const error = new Error('ExporterBehaviourMockError');
 
-      await expect(getConversionFactorsData('')).rejects.toThrow('Error: connection string can not be empty');
+      mockReadToText.mockRejectedValue(error);
+
+      await expect(blob.getExporterBehaviourData('connString')).rejects.toThrow('ExporterBehaviourMockError');
+
+      expect(mockLogError).toHaveBeenNthCalledWith(1, error);
+      expect(mockLogError).toHaveBeenNthCalledWith(2, 'Cannot read remote file exporter_behaviour.csv from container exporterbehaviour')
+  });
+
+  it('will return exporter behaviour data', async () => {
+      mockReadToText.mockResolvedValue('accountId,contactId,name,score\nID1,,Exporter 1,0.5\nID2,,Exporter 2,0.75');
+
+      const expected = [
+          { accountId: 'ID1', name: 'Exporter 1', score: 0.5 },
+          { accountId: 'ID2', name: 'Exporter 2', score: 0.75 }
+      ];
+
+      const res = await blob.getExporterBehaviourData('connString');
+
+      expect(res).toStrictEqual(expected);
+  });
+
+});
+
+describe('getSpeciesAliases', () => {
+  let mockLogError;
+  let mockReadToText;
+  let mockBlobClient;
+
+  const container = 'speciesmismatch';
+  const file = 'speciesmismatch.json';
+
+  beforeEach(() => {
+      mockLogError = jest.spyOn(logger, 'error');
+      mockReadToText = jest.spyOn(blob, 'readToText');
+
+      mockBlobClient = jest.spyOn(BlobServiceClient, 'fromConnectionString');
+      const containerObj = new ContainerClient(container);
+      containerObj.getBlobClient = () => new BlobClient(file);
+      mockBlobClient.mockImplementation(() => ({
+          getContainerClient: () => containerObj,
+      }));
+  });
+
+  afterEach(() => {
+      jest.restoreAllMocks();
+  });
+
+  it('will log and rethrow any errors', async () => {
+      const error = new Error('SpeciesAliasesMockError');
+      mockReadToText.mockRejectedValue(error);
+      await expect(blob.getSpeciesAliasesFromBlob('connString')).rejects.toThrow('Error: SpeciesAliasesMockError');
+
+      expect(mockLogError).toHaveBeenNthCalledWith(1, error);
+      expect(mockLogError).toHaveBeenNthCalledWith(2, `Cannot read remote file ${file} from container ${container}`);
+  });
+
+  it('will return species aliases data', async () => {
+      mockReadToText.mockResolvedValue(JSON.stringify([{
+        speciesName: "Squid",
+        speciesCode: "SQC",
+        speciesAlias: ["SQR", "SQZ", "SQI"]
+      }]));
+      const res = await blob.getSpeciesAliasesFromBlob('connString');
+
+      expect(res).toBeInstanceOf(Object);
+      expect.objectContaining({ "SQC": ["SQR", "SQZ", "SQI"] })
+  });
+});
+
+describe('getConversionFactorsData', () => {
+
+  let mockLogError;
+  let mockReadToText;
+  let mockBlobClient;
+
+  const container = 'conversionfactors';
+  const file = 'conversionfactors.csv'
+
+  beforeEach(() => {
+      mockLogError = jest.spyOn(logger, 'error');
+      mockReadToText = jest.spyOn(blob, 'readToText');
+
+      mockBlobClient = jest.spyOn(BlobServiceClient, 'fromConnectionString');
+      const containerObj = new ContainerClient(container);
+      containerObj.getBlobClient = () => new BlobClient(file);
+      mockBlobClient.mockImplementation(() => ({
+          getContainerClient: () => containerObj,
+      }));
+  });
+
+  afterEach(() => {
+      jest.restoreAllMocks();
+  });
+
+  it('will log and rethrow any errors', async () => {
+      const error = new Error('ConversionFactorsMockError');
+
+      mockReadToText.mockRejectedValue(error);
+
+      await expect(blob.getConversionFactorsData('connString')).rejects.toThrow('ConversionFactorsMockError');
 
       expect(mockLogError).toHaveBeenNthCalledWith(1, error);
       expect(mockLogError).toHaveBeenNthCalledWith(2, `Cannot read remote file ${file} from container ${container}`);
   });
 
   it('will return conversion factors data', async () => {
-      const res = await getConversionFactorsData('connString');
+    mockReadToText.mockResolvedValue('species,state,presentation,toLiveWeightFactor,quotaStatus,riskScore\nALB,FRE,GUT,1.11,quota,1');
 
-      expect(res).toHaveLength(1);
-      expect(res[0]).toStrictEqual({
+    const res = await blob.getConversionFactorsData('connString');
+
+    expect(res).toHaveLength(1);
+    expect(res[0]).toStrictEqual({
         presentation: "GUT",
         quotaStatus: "quota",
         riskScore: "1",
         species: "ALB",
         state: "FRE",
         toLiveWeightFactor: "1.11"
-      });
+    });
   });
+});
+describe('readToText', () => {
 
+  let mockBlobClient;
+
+  it('will return downloaded blob as a string', async () => {
+      const stream = new Readable();
+      stream.push("testing");
+      stream.push(null);
+
+      mockBlobClient = {
+          download: () => {
+              return {
+                  readableStreamBody: stream
+              }
+          }
+      }
+      const result = await blob.readToText(mockBlobClient);
+      expect(result).toEqual('testing');
+  });
 });

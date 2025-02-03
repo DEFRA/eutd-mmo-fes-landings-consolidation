@@ -165,7 +165,7 @@ export const updateConversionFactorCache = (factors: IConversionFactor[]) => {
   }
 }
 
-export const updateSpeciesAliasesCache = (speciesAliases?: any | undefined) => {
+export const updateSpeciesAliasesCache = (speciesAliases: any) => {
   if (speciesAliases) {
     logger.info(`[LANDINGS-CONSOLIDATION][LOADING-SPECIES-ALIASES-INTO-CACHE][${Object.keys(speciesAliases).length}]`);
     SPECIES_ALIASES = speciesAliases;

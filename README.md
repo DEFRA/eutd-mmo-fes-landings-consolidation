@@ -1,6 +1,15 @@
 # Introduction 
 TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
 
+# Things to Consider
+* This repository should use GitFlow as a branching strategy.
+* <img
+    src="docs/images/GitFlow-branching-strategy.png"
+    alt="Branching Strategy"
+    title="GitFlow"
+    style="display: inline-block; margin: 0 auto; max-width: 350px">
+* If you won't call your branch as per agreed branching `standards`, the Azure pipeline won't start or may fail to deploy an image.
+
 # Getting Started
 TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
 1.	Installation process

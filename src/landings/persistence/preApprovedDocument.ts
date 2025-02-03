@@ -6,7 +6,7 @@ export const isDocumentPreApproved = async (documentNumber: string) => {
 
   const preApprovedDocument = await PreApprovedDocumentModel.findOne({ documentNumber }, null, { lean: true });
 
-  if (preApprovedDocument && preApprovedDocument.certificateData) {
+  if (preApprovedDocument?.certificateData) {
     const isPreApproved = !!preApprovedDocument.certificateData
     logger.info(`[LANDINGS-CONSOLIDATION][PREAPPROVAL-CHECK][${documentNumber}][${isPreApproved}]`);
     return isPreApproved;
