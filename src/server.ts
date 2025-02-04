@@ -6,7 +6,7 @@ import { schedule } from 'node-cron';
 import appInsights from './app-insights';
 import appConfig, { ApplicationConfig } from './config';
 import { jobsRoutes } from './handler/jobs';
-
+import { staticRoutesWithoutAuth } from './handler/static-routes';
 import logger from './logger';
 import { loadExporterBehaviour, loadFishCountriesAndSpecies, loadVessels } from './data/cache';
 export class Server {
@@ -131,4 +131,5 @@ const validate = (_req: Hapi.Request, username: string, password: string) => {
 
 const setupRoutes = (server: Hapi.Server<Hapi.ServerApplicationState>) => {
   jobsRoutes(server);
+  staticRoutesWithoutAuth(server);
 }
