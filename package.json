@@ -76,7 +76,7 @@
         "joi": "^17.10.0",
         "lodash": "^4.17.21",
         "mingo": "^6.4.10",
-        "mmo-shared-reference-data": "1.2.0-alpha.10",
+        "mmo-shared-reference-data": "1.2.1",
         "mongodb": "6.0.0",
         "mongoose": "^8.0.0",
         "node-cron": "^3.0.2",
