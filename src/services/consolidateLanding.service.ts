@@ -93,7 +93,7 @@ export const consolidateLandings = async (consolidatedLandings: IConsolidateLand
     logger.info(`[LANDINGS-CONSOLIDATION][NUMBER-OF-SPECIES-FOUND-ON-CATCH-CERTIFICATES][${landingDetail.dateLanded}-${landingDetail.pln}][${Object.keys(speciesIdxFromDocument).length}]`);
 
     // 3. iterate through all of the items to build landings array
-    consolidatedLanding.items = buildLandingsArray(consolidatedLanding.items, speciesIdxFromDocument);
+    consolidatedLanding.items = buildLandingsArray(consolidatedLanding.items, speciesIdxFromDocument, consolidatedLanding.source);
 
     // 4. calculate overuse and add isOverusedAllCerts true | false
     consolidatedLanding.items.forEach((item: IConsolidateLandingItem) => {
@@ -138,7 +138,7 @@ export const consolidateLandings = async (consolidatedLandings: IConsolidateLand
   }
 };
 
-const buildLandingsArray = (inputArray: IConsolidateLandingItem[], speciesIdxFromDocument: ILandingSpeciesIdx) => {
+const buildLandingsArray = (inputArray: IConsolidateLandingItem[], speciesIdxFromDocument: ILandingSpeciesIdx, source?: LandingSources) => {
   return inputArray.reduce((consolidatedLandingItems: IConsolidateLandingItem[], consolidatedLandingItem: IConsolidateLandingItem) => {
     const speciesLandings: ICatchCertificateLanding[] = speciesIdxFromDocument[consolidatedLandingItem.species];
 
@@ -149,7 +149,7 @@ const buildLandingsArray = (inputArray: IConsolidateLandingItem[], speciesIdxFro
         landings: [...speciesLandings]
       }
 
-      return isOverusedAllCerts(tempConsolidate) ? [...consolidatedLandingItems, tempConsolidate] : consolidatedLandingItems;
+      return isOverusedAllCerts(tempConsolidate) || isWithinDeminimus(tempConsolidate, source, null) ? [...consolidatedLandingItems, tempConsolidate] : consolidatedLandingItems;
     }
 
     // check for species-alias
@@ -164,7 +164,7 @@ const buildLandingsArray = (inputArray: IConsolidateLandingItem[], speciesIdxFro
           landings: [...speciesAliasOnCert]
         }
 
-        return isOverusedAllCerts(tempConsolidate) ? [...consolidatedLandingItems, tempConsolidate] : consolidatedLandingItems;
+        return isOverusedAllCerts(tempConsolidate) || isWithinDeminimus(tempConsolidate, source, null) ? [...consolidatedLandingItems, tempConsolidate] : consolidatedLandingItems;
       }
     }
 

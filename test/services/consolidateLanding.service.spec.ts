@@ -152,7 +152,7 @@ const buildDocumentUsageCertificatesCollection = async () => {
               landingDataEndDate: moment.utc().format('YYYY-MM-DD')
             }
           ]
-        },{
+        }, {
           speciesId: "CC1-2-COD",
           speciesCode: "COD",
           state: {
@@ -216,7 +216,7 @@ const buildDocumentUsageCertificatesCollection = async () => {
               landingDataEndDate: moment.utc().format('YYYY-MM-DD')
             }
           ]
-        },{
+        }, {
           speciesId: "CC2-2-COD",
           speciesCode: "COD",
           state: {
@@ -322,8 +322,8 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
   }];
 
   const speciesAliases = {
-    MON: [ 'ANF' ],
-    ANF: [ 'MON' ]
+    MON: ['ANF'],
+    ANF: ['MON']
   };
 
   const vesselsIdx = generateIndex(vesselData);
@@ -412,7 +412,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert.save();
 
     const model = new LandingModel({
@@ -430,8 +430,8 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
       source: LandingSources.ELog,
       items: [{
         species: "COD",
-        landedWeight : 0,
-        isEstimate : true,
+        landedWeight: 0,
+        isEstimate: true,
         isWithinDeminimus: true,
         exportWeight: 50,
         landings: [{
@@ -491,7 +491,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert.save();
 
     const model = new LandingModel({
@@ -509,8 +509,8 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
       source: LandingSources.ELog,
       items: [{
         species: "COD",
-        landedWeight : 0,
-        isEstimate : true,
+        landedWeight: 0,
+        isEstimate: true,
         isWithinDeminimus: true,
         exportWeight: 50,
         landings: [{
@@ -570,7 +570,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert.save();
 
     const catchCert_2 = new CatchCertificateModel({
@@ -610,7 +610,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert_2.save();
 
     const model = new LandingModel({
@@ -628,8 +628,8 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
       source: LandingSources.ELog,
       items: [{
         species: "COD",
-        landedWeight : 0,
-        isEstimate : true,
+        landedWeight: 0,
+        isEstimate: true,
         isWithinDeminimus: true,
         exportWeight: 50,
         landings: [{
@@ -639,7 +639,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
           dataEverExpected: true,
           landingDataExpectedDate: "2023-10-11",
           landingDataEndDate: "2023-10-25"
-        },{
+        }, {
           landingId: "CC2-1",
           documentNumber: "CC2",
           weight: 50,
@@ -696,7 +696,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert.save();
 
     const catchCert_2 = new CatchCertificateModel({
@@ -736,7 +736,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert_2.save();
 
     const model = new LandingModel({
@@ -754,8 +754,8 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
       source: LandingSources.ELog,
       items: [{
         species: "COD",
-        landedWeight : 0,
-        isEstimate : true,
+        landedWeight: 0,
+        isEstimate: true,
         isWithinDeminimus: true,
         exportWeight: 50,
         landings: [{
@@ -765,7 +765,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
           dataEverExpected: true,
           landingDataExpectedDate: "2023-10-11",
           landingDataEndDate: "2023-10-25"
-        },{
+        }, {
           landingId: "CC2-1",
           documentNumber: "CC2",
           weight: 50,
@@ -822,7 +822,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert.save();
 
     const catchCert_2 = new CatchCertificateModel({
@@ -862,7 +862,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert_2.save();
 
     const model = new LandingModel({
@@ -880,8 +880,8 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
       source: LandingSources.ELog,
       items: [{
         species: "COD",
-        landedWeight : 0,
-        isEstimate : true,
+        landedWeight: 0,
+        isEstimate: true,
         isWithinDeminimus: true,
         exportWeight: 50,
         landings: [{
@@ -891,7 +891,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
           dataEverExpected: true,
           landingDataExpectedDate: "2023-10-11",
           landingDataEndDate: moment.utc().format('YYYY-MM-DD')
-        },{
+        }, {
           landingId: "CC2-1",
           documentNumber: "CC2",
           weight: 50,
@@ -1123,7 +1123,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert.save();
 
     const transformedLandings: IConsolidateLanding[] = [{
@@ -1133,7 +1133,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
       items: [{
         species: "HER",
         landedWeight: 100,
-        isEstimate: false
+        isEstimate: true
       }]
     }];
 
@@ -1195,7 +1195,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert.save();
 
     const transformedLandings: IConsolidateLanding[] = [{
@@ -1281,7 +1281,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert.save();
 
     const transformedLandings: IConsolidateLanding[] = [{
@@ -1354,7 +1354,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert.save();
 
     const transformedLandings: IConsolidateLanding[] = [{
@@ -1427,7 +1427,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert.save();
 
     const catchCert_HER_1 = new CatchCertificateModel({
@@ -1467,7 +1467,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert_HER_1.save();
 
     const catchCert_HER_2 = new CatchCertificateModel({
@@ -1507,7 +1507,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert_HER_2.save();
 
     const transformedLandings: IConsolidateLanding[] = [{
@@ -1588,7 +1588,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert.save();
 
     const catchCert_MON_1 = new CatchCertificateModel({
@@ -1628,7 +1628,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert_MON_1.save();
 
     const catchCert_MON_2 = new CatchCertificateModel({
@@ -1668,7 +1668,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert_MON_2.save();
 
     const transformedLandings: IConsolidateLanding[] = [{
@@ -1749,7 +1749,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert.save();
 
     const transformedLandings: IConsolidateLanding[] = [{
@@ -1767,6 +1767,180 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
 
     const results = await ConsolidateLandingModel.find({});
     expect(results).toHaveLength(1)
+  });
+
+    it('will not update the landings consolidate landings collection with entry for landing declarations with a species within deminimus', async () => {
+    const catchCert = new CatchCertificateModel({
+      status: "COMPLETE",
+      __t: "catchCert",
+      documentNumber: "CC1",
+      createdAt: "2019-07-10T08:26:06.939Z",
+      createdBy: "Bob",
+      createdByEmail: "foo@foo.com",
+      exportData: {
+        products: [
+          {
+            speciesId: "CC1-1-COD",
+            speciesCode: "COD",
+            state: {
+              code: "FRE",
+              name: "Fresh"
+            },
+            presentation: {
+              code: "FIS",
+              name: "Filleted and skinned"
+            },
+            factor: 1,
+            caughtBy: [
+              {
+                id: "CC1-1",
+                vessel: "DAYBREAK",
+                pln: "WA1",
+                date: "2023-10-09",
+                weight: 45,
+                dataEverExpected: true,
+                landingDataExpectedDate: "2023-10-11",
+                landingDataEndDate: moment.utc().format('YYYY-MM-DD')
+              }
+            ]
+          }
+        ]
+      }
+    });
+
+    await catchCert.save();
+
+    const transformedLandings: IConsolidateLanding[] = [{
+      dateLanded: "2023-10-09",
+      rssNumber: "rssWA1",
+      source: LandingSources.LandingDeclaration,
+      items: [{
+        species: "COD",
+        landedWeight: 45,
+        isEstimate: true
+      }]
+    }];
+
+    await consolidateLandings(transformedLandings);
+
+    const results = await ConsolidateLandingModel.find({});
+    expect(results).toHaveLength(0);
+  });
+
+  it('will not update the landings consolidate landings collection with entry for elog species above the deminimus', async () => {
+    const catchCert = new CatchCertificateModel({
+      status: "COMPLETE",
+      __t: "catchCert",
+      documentNumber: "CC1",
+      createdAt: "2019-07-10T08:26:06.939Z",
+      createdBy: "Bob",
+      createdByEmail: "foo@foo.com",
+      exportData: {
+        products: [
+          {
+            speciesId: "CC1-1-COD",
+            speciesCode: "COD",
+            state: {
+              code: "FRE",
+              name: "Fresh"
+            },
+            presentation: {
+              code: "FIS",
+              name: "Filleted and skinned"
+            },
+            factor: 1,
+            caughtBy: [
+              {
+                id: "CC1-1",
+                vessel: "DAYBREAK",
+                pln: "WA1",
+                date: "2023-10-09",
+                weight: 51,
+                dataEverExpected: true,
+                landingDataExpectedDate: "2023-10-11",
+                landingDataEndDate: moment.utc().format('YYYY-MM-DD')
+              }
+            ]
+          }
+        ]
+      }
+    });
+
+    await catchCert.save();
+
+    const transformedLandings: IConsolidateLanding[] = [{
+      dateLanded: "2023-10-09",
+      rssNumber: "rssWA1",
+      source: LandingSources.ELog,
+      items: [{
+        species: "HER",
+        landedWeight: 45,
+        isEstimate: true
+      }]
+    }];
+
+    await consolidateLandings(transformedLandings);
+
+    const results = await ConsolidateLandingModel.find({});
+    expect(results).toHaveLength(0);
+  });
+
+  it('will not update the landings consolidate landings collection with entry for elog species within the deminimus on catch certificate', async () => {
+    const catchCert = new CatchCertificateModel({
+      status: "COMPLETE",
+      __t: "catchCert",
+      documentNumber: "CC1",
+      createdAt: "2019-07-10T08:26:06.939Z",
+      createdBy: "Bob",
+      createdByEmail: "foo@foo.com",
+      exportData: {
+        products: [
+          {
+            speciesId: "CC1-1-COD",
+            speciesCode: "COD",
+            state: {
+              code: "FRE",
+              name: "Fresh"
+            },
+            presentation: {
+              code: "FIS",
+              name: "Filleted and skinned"
+            },
+            factor: 1,
+            caughtBy: [
+              {
+                id: "CC1-1",
+                vessel: "DAYBREAK",
+                pln: "WA1",
+                date: "2023-10-09",
+                weight: 45,
+                dataEverExpected: true,
+                landingDataExpectedDate: "2023-10-11",
+                landingDataEndDate: moment.utc().format('YYYY-MM-DD')
+              }
+            ]
+          }
+        ]
+      }
+    });
+
+    await catchCert.save();
+
+    const transformedLandings: IConsolidateLanding[] = [{
+      dateLanded: "2023-10-09",
+      rssNumber: "rssWA1",
+      source: LandingSources.ELog,
+      items: [{
+        species: "COD",
+        landedWeight: 45,
+        isEstimate: true
+      }]
+    }];
+
+    await consolidateLandings(transformedLandings);
+
+    const results = await ConsolidateLandingModel.find({});
+    expect(results).toHaveLength(0);
   });
 
   it('will not update the landings consolidate landings collection with entry for elog species failure above the deminimus', async () => {
@@ -1807,7 +1981,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert.save();
 
     const transformedLandings: IConsolidateLanding[] = [{
@@ -1817,7 +1991,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
       items: [{
         species: "HER",
         landedWeight: 100,
-        isEstimate: false
+        isEstimate: true
       }]
     }];
 
@@ -1855,7 +2029,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
                 vessel: "DAYBREAK",
                 pln: "WA1",
                 date: "2023-10-09",
-                weight: 51,
+                weight: 45,
                 dataEverExpected: true,
                 landingDataExpectedDate: "2023-10-11",
                 landingDataEndDate: moment.utc().format('YYYY-MM-DD')
@@ -1865,7 +2039,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert.save();
 
     const transformedLandings: IConsolidateLanding[] = [{
@@ -1923,7 +2097,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert.save();
 
     const transformedLandings: IConsolidateLanding[] = [{
@@ -2048,7 +2222,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
           dataEverExpected: true,
           landingDataExpectedDate: "2023-10-11",
           landingDataEndDate: moment.utc().format('YYYY-MM-DD')
-        },{
+        }, {
           landingId: "CC2-1",
           documentNumber: "CC2",
           isHighRisk: true,
@@ -2181,7 +2355,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
           dataEverExpected: true,
           landingDataExpectedDate: "2023-10-11",
           landingDataEndDate: moment.utc().format('YYYY-MM-DD')
-        },{
+        }, {
           landingId: "CC2-1",
           documentNumber: "CC2",
           isHighRisk: true,
@@ -2368,7 +2542,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
           isPreApproved: false,
           landingDataExpectedDate: "2023-10-11",
           landingDataEndDate: moment.utc().format('YYYY-MM-DD')
-        },{
+        }, {
           landingId: "CC2-1",
           documentNumber: "CC2",
           isHighRisk: true,
@@ -2393,7 +2567,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
           dataEverExpected: true,
           landingDataExpectedDate: "2023-10-11",
           landingDataEndDate: moment.utc().format('YYYY-MM-DD')
-        },{
+        }, {
           landingId: "CC2-1",
           documentNumber: "CC2",
           isHighRisk: true,
@@ -4566,9 +4740,9 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
     await model.save();
 
     const preApprovedDocument = new PreApprovedDocumentModel({
-      documentNumber : "CC1",
-      preApprovedBy : "Bob",
-      certificateData : "somedata"
+      documentNumber: "CC1",
+      preApprovedBy: "Bob",
+      certificateData: "somedata"
     });
 
     await preApprovedDocument.save();
@@ -4676,9 +4850,9 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
     await model.save();
 
     const preApprovedDocument = new PreApprovedDocumentModel({
-      documentNumber : "CC2",
-      preApprovedBy : "Bob",
-      certificateData : "somedata"
+      documentNumber: "CC2",
+      preApprovedBy: "Bob",
+      certificateData: "somedata"
     });
 
     await preApprovedDocument.save();
@@ -4786,17 +4960,17 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
     await model.save();
 
     let preApprovedDocument = new PreApprovedDocumentModel({
-      documentNumber : "CC1",
-      preApprovedBy : "Bob",
-      certificateData : "somedata"
+      documentNumber: "CC1",
+      preApprovedBy: "Bob",
+      certificateData: "somedata"
     });
 
     await preApprovedDocument.save();
 
     preApprovedDocument = new PreApprovedDocumentModel({
-      documentNumber : "CC2",
-      preApprovedBy : "Bob",
-      certificateData : "somedata"
+      documentNumber: "CC2",
+      preApprovedBy: "Bob",
+      certificateData: "somedata"
     });
 
     await preApprovedDocument.save();
@@ -4888,7 +5062,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
 
     await consolidatedLanded.save();
 
-    const expected:IConsolidateLanding[] = [];
+    const expected: IConsolidateLanding[] = [];
 
     await voidConsolidateLandings('CC1');
     const results = await ConsolidateLandings.getConsolidationLandings();
@@ -4970,7 +5144,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
 
     await consolidatedLanded.save();
 
-    const expected:IConsolidateLanding[] = [];
+    const expected: IConsolidateLanding[] = [];
 
     await voidConsolidateLandings('CC1');
     const results = await ConsolidateLandings.getConsolidationLandings();
@@ -5086,7 +5260,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
           landingDataEndDate: moment.utc().format('YYYY-MM-DD'),
           isHighRisk: false,
           isPreApproved: false
-        },{
+        }, {
           landingId: "CC2-1",
           documentNumber: "CC2",
           weight: 50,
@@ -5101,7 +5275,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
 
     await consolidatedLanded.save();
 
-    const expected:IConsolidateLanding[] = [{
+    const expected: IConsolidateLanding[] = [{
       dateLanded: "2020-01-01",
       rssNumber: "rssWA1",
       source: LandingSources.ELog,
@@ -5239,7 +5413,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
           landingDataEndDate: moment.utc().format('YYYY-MM-DD'),
           isHighRisk: false,
           isPreApproved: false
-        },{
+        }, {
           landingId: "CC2-1",
           documentNumber: "CC2",
           weight: 51,
@@ -5254,7 +5428,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
 
     await consolidatedLanded.save();
 
-    const expected:IConsolidateLanding[] = [];
+    const expected: IConsolidateLanding[] = [];
 
     await voidConsolidateLandings('CC1');
     const results = await ConsolidateLandings.getConsolidationLandings();
@@ -5326,7 +5500,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
 
     await consolidatedLanded.save();
 
-    const expected:IConsolidateLanding[] = [{
+    const expected: IConsolidateLanding[] = [{
       dateLanded: "2020-01-01",
       rssNumber: "rssWA1",
       source: LandingSources.LandingDeclaration,
@@ -5431,7 +5605,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
           isHighRisk: false,
           isPreApproved: false
         }]
-      },{
+      }, {
         species: "HER",
         landedWeight: 200,
         isEstimate: false,
@@ -5452,7 +5626,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
 
     await consolidatedLanded.save();
 
-    const expected:IConsolidateLanding[] = [];
+    const expected: IConsolidateLanding[] = [];
 
     await voidConsolidateLandings('CC1');
     const results = await ConsolidateLandings.getConsolidationLandings();
@@ -5534,7 +5708,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
 
     await consolidatedLanded.save();
 
-    const expected:IConsolidateLanding[] = [{
+    const expected: IConsolidateLanding[] = [{
       dateLanded: "2020-01-01",
       rssNumber: "rssWA1",
       source: LandingSources.LandingDeclaration,
@@ -5629,7 +5803,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
 
     await consolidatedLanded.save();
 
-    const expected:IConsolidateLanding[] = [{
+    const expected: IConsolidateLanding[] = [{
       dateLanded: "2020-01-01",
       rssNumber: "rssWA1",
       source: LandingSources.LandingDeclaration,
@@ -5698,7 +5872,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
 
     await model.save();
 
-    const expected:IConsolidateLanding[] = [];
+    const expected: IConsolidateLanding[] = [];
 
     await voidConsolidateLandings('CC1');
     const results = await ConsolidateLandings.getConsolidationLandings();
@@ -5845,7 +6019,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
           landingDataEndDate: moment.utc().format('YYYY-MM-DD'),
           isHighRisk: true,
           isPreApproved: false
-        },{
+        }, {
           landingId: "CC2-1",
           documentNumber: "CC2",
           weight: 100,
@@ -5854,7 +6028,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
           landingDataEndDate: moment.utc().format('YYYY-MM-DD'),
           isHighRisk: true,
           isPreApproved: false
-        },{
+        }, {
           landingId: "CC3-1",
           documentNumber: "CC3",
           weight: 1000,
@@ -5869,7 +6043,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
 
     await consolidatedLanded.save();
 
-    const expected:IConsolidateLanding[] = [{
+    const expected: IConsolidateLanding[] = [{
       dateLanded: "2020-01-01",
       rssNumber: "rssWA1",
       source: LandingSources.LandingDeclaration,
@@ -6029,10 +6203,10 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
     expect(rssWA1).toBeNull();
     expect(rssWA2).toBeNull();
   });
-   
+
   it('will log error found whilst voiding landings', async () => {
     mockDeleteMany.mockRejectedValue(new Error('something has gone wrong'));
-    
+
     const catchCert = new CatchCertificateModel({
       status: "VOID",
       __t: "catchCert",
@@ -6175,7 +6349,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
 
     await consolidatedLanded.save();
 
-    const expected:IConsolidateLanding[] = [{
+    const expected: IConsolidateLanding[] = [{
       dateLanded: "2020-01-01",
       rssNumber: "rssWA1",
       source: LandingSources.LandingDeclaration,
@@ -6189,7 +6363,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
       }]
     }];
 
-    await voidConsolidateLandings('CC1');    
+    await voidConsolidateLandings('CC1');
     const results = await ConsolidateLandings.getConsolidationLandings();
     expect(results).toStrictEqual(expected);
   });
@@ -6260,7 +6434,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
 
     await consolidatedLanded.save();
 
-    const expected:IConsolidateLanding[] = [{
+    const expected: IConsolidateLanding[] = [{
       dateLanded: "2020-01-01",
       rssNumber: "rssWA1",
       source: LandingSources.LandingDeclaration,
@@ -6274,7 +6448,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
       }]
     }];
 
-    await voidConsolidateLandings('CC1');    
+    await voidConsolidateLandings('CC1');
     const results = await ConsolidateLandings.getConsolidationLandings();
     expect(results).toStrictEqual(expected);
   });
@@ -6327,7 +6501,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         ]
       }
     });
-  
+
     await catchCert.save();
 
     const landings: ILanding[] = [{
