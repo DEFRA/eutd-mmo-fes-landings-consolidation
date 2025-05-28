@@ -5,6 +5,10 @@ parameters:
     displayName: "Deploy from Feature Branch"
     type: boolean
     default: false
+  - name: deployToSecondaryRegion
+    displayName: "Deploy to Secondary Region for DR"
+    type: boolean
+    default: false
 
 trigger:
   branches:
@@ -20,9 +24,9 @@ resources:
       name: mmo-fes-pipeline-common
       type: git
       ref: main
-
 extends:
   template: /includes/app-deployment.yaml@MMOPipelineCommon
   parameters:
     appName: 'mmo-fes-landings-consolidation'
     deployFromFeature: ${{ parameters.deployFromFeature }}
+    deployToSecondaryRegion: ${{ parameters.deployToSecondaryRegion }}
