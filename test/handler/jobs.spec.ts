@@ -180,7 +180,7 @@ describe('routes', () => {
     const response = await server.inject(req);
     expect(mockLoggerInfo).toHaveBeenCalledWith('[LANDING-CONSOLIDATION][UPDATING-LANDINGS][0]');
     expect(mockLandingsConsolidateJob).toHaveBeenCalled();
-    expect(response.statusCode).toBe(200);
+    expect(response.statusCode).toBe(202);
   });
 
   it('will always return a status of 400 if the payload of the request is incorrect (missing landings attribute)', async () => {
@@ -210,7 +210,7 @@ describe('routes', () => {
   });
 
   it('will return a status of 500 if something goes wrong when updating landings', async () => {
-    mockLandingsConsolidateJob.mockRejectedValue(new Error('something has gone wrong'));
+    mockLandingsConsolidateJob.mockImplementation(() => { throw new Error('something has gone wrong') });
 
     const req = {
       method: 'POST',
