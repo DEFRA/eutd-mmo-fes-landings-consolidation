@@ -1,0 +1,100 @@
+appSettings:
+  - key: AZURE_QUEUE_CONNECTION_STRING
+    value: 'SERVICEBUS-CONNECTION-STRING'
+    type: secret
+  
+  - key: BOOMI_URL
+    value: '#{{ boomiUrl }}'
+    type: config
+  
+  - key: COSMOS_DB_RW_CONNECTION_URI
+    value: 'COSMOS-DB-RW-CONNECTION-URI'
+    type: secret
+  
+  - key: DB_NAME
+    value: 'mmo_exportcert'
+    type: config
+  
+  - key: EXTERNAL_APP_URL
+    value: '#{{ externalFrontendBaseUrl }}'
+    type: config
+    stagingValue: '#{{ externalFrontendStgBaseUrl }}'
+    slotSetting: true
+  
+  - key: INSTRUMENTATION_CLOUD_ROLE
+    value: '#{{ repoName4 }}'
+    type: config
+    stagingValue: '#{{ repoName4 }}-staging'
+    slotSetting: true
+  
+  - key: INTERNAL_ADMIN_URL
+    value: '#{{ internalAdminFrontendBaseUrl }}'
+    type: config
+    stagingValue: '#{{ internalAdminFrontendStgBaseUrl }}'
+    slotSetting: true
+  
+  - key: NODE_ENV
+    value: 'production'
+    type: config
+  
+  - key: PORT
+    value: '9000'
+    type: config
+  
+  - key: REF_BOOMI_CERTIFICATE
+    value: 'REF-BOOMI-CERTIFICATE'
+    type: secret
+  
+  - key: REF_BOOMI_PASSPHRASE
+    value: 'REF-BOOMI-PASSPHRASE'
+    type: secret
+  
+  - key: REF_BOOMI_USER
+    value: 'REF-BOOMI-USER'
+    type: secret
+  
+  - key: REF_SERVICE_BASIC_AUTH_PASSWORD
+    value: 'REF-SERVICE-BASIC-AUTH-PASSWORD'
+    type: secret
+  
+  - key: REF_SERVICE_BASIC_AUTH_USER
+    value: 'REF-SERVICE-BASIC-AUTH-USER'
+    type: secret
+  
+  - key: REFERENCE_DATA_AZURE_STORAGE
+    value: 'REFDATA-STORAGE-CONNECTION-STRING'
+    type: secret
+  
+  - key: REFRESH_SPECIES_JOB
+    value: '#{{ REF_DATA_READER_REFRESH_SPECIES_JOB }}'
+    type: config
+  
+  - key: REFRESH_VESSEL_JOB
+    value: '#{{ REF_DATA_READER_REFRESH_VESSEL_JOB }}'
+    type: config
+  
+  - key: WEBSITE_HEALTHCHECK_MAXPINGFAILURES
+    value: '5'
+    type: config
+  
+  - key: WEBSITE_HEALTHCHECK_MAXUNHEALTHYWORKERPERCENT
+    value: '50'
+    type: config
+  
+  - key: WEBSITE_NAME
+    value: '#{{ environment }}-#{{ repoName4 }}-#{{ nc-resource-webapp }}'
+    type: config
+    stagingValue: '#{{ environment }}-#{{ repoName4 }}-#{{ nc-resource-webapp }}-staging'
+    slotSetting: true
+  
+  - key: WEBSITE_WARMUP_PATH
+    value: '/health'
+    type: config
+  
+  - key: WEBSITES_CONTAINER_START_TIME_LIMIT
+    value: '300'
+    type: config
+  
+  - key: WEBSITES_PORT
+    value: '9000'
+    type: config
