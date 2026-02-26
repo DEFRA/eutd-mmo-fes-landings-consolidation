@@ -4,11 +4,10 @@ import { CatchCertificate, CatchCertificateModel, IDocumentLandingQuery } from "
 import logger from "../../logger"
 
 export const getCatchCertificates = async (landing: IDocumentLandingQuery): Promise<CatchCertificate[]> => {
-  const query: FilterQuery<any> = {
+   const query: FilterQuery<any> = {
     __t: 'catchCert',
-    createdAt: { $type: 9 },
+    'status': DocumentStatuses.Complete,
     'exportData.products': { $exists: true },
-    $or: [{ 'status': { $exists: false } }, { 'status': DocumentStatuses.Complete }]
   }
 
   if (!landing) return [];

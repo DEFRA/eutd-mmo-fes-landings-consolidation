@@ -225,7 +225,7 @@ describe('MongoMemoryServer - Fetching catch certificates', () => {
   
     });
   
-    it('multiple catch certs multiple landings', async () => {
+    it('should exclude all catch certs without a status', async () => {
   
       let catchCert: CatchCertModel;
   
@@ -318,11 +318,11 @@ describe('MongoMemoryServer - Fetching catch certificates', () => {
       
       const res = await getCatchCertificates(landings)
   
-      expect(res).toHaveLength(3)
+      expect(res).toHaveLength(0)
   
     });
   
-    it('multiple catch certs only one match', async () => {
+    it('should exclude all multiple catch certs wihtout a status', async () => {
   
       let catchCert: CatchCertModel;
   
@@ -369,11 +369,11 @@ describe('MongoMemoryServer - Fetching catch certificates', () => {
       const landings: IDocumentLandingQuery = { pln: 'WA1', dateLanded: '2019-07-10' };
       const res = await getCatchCertificates(landings)
   
-      expect(res).toHaveLength(1);
+      expect(res).toHaveLength(0);
   
     });
 
-    it('multiple catch certs multiple with landings', async () => {
+    it('should exclude multiple catch certs multiple with landings with a document status', async () => {
   
       let catchCert: CatchCertModel;
   
@@ -466,7 +466,7 @@ describe('MongoMemoryServer - Fetching catch certificates', () => {
       
       const res = await getCatchCertificates(landings)
   
-      expect(res).toHaveLength(3)
+      expect(res).toHaveLength(0)
   
     })
   });
