@@ -17,7 +17,7 @@ import logger from "../../src/logger";
 describe('get conversion factors', () => {
 
   it('should throw and log an error if file does not exist', async () => {
-    await expect(() => getConversionFactors('should throw error')).rejects.toThrow('Error: File does not exist. Check to make sure the file path to your csv is correct.');
+    await expect(() => getConversionFactors('should throw error')).rejects.toThrow('Check to make sure the file path to your csv is correct.');
   });
 
   it('should return an array conversion factor object', async () => {
@@ -195,7 +195,7 @@ describe('loadVesselsDataFromLocalFile', () => {
 describe('get exporter behaviour csv', () => {
 
   it('should throw and log an error if file does not exist', async () => {
-    await expect(() => getExporterBehaviourFromCSV('should throw error')).rejects.toThrow('Error: File does not exist. Check to make sure the file path to your csv is correct.');
+    await expect(() => getExporterBehaviourFromCSV('should throw error')).rejects.toThrow('Check to make sure the file path to your csv is correct.');
   });
 
   it('should return an array of exporter behaviour objects', async () => {
@@ -211,7 +211,7 @@ describe('get vessels of interest', () => {
   const filePath = `${__dirname}/../../data/vesselsOfInterest.csv`;
 
   it('should throw and log an error if file does not exist', async () => {
-    await expect(() => getVesselsOfInterestFromFile('should throw error')).rejects.toThrow('Error: File does not exist. Check to make sure the file path to your csv is correct.');
+    await expect(() => getVesselsOfInterestFromFile('should throw error')).rejects.toThrow('Check to make sure the file path to your csv is correct.');
   });
 
   it('should return an array of vessels of interests', async () => {
@@ -227,7 +227,7 @@ describe('get vessels of interest', () => {
 
 describe('get weighting risk factors', () => {
   it('should throw and log an error if file does not exist', async () => {
-    await expect(() => getWeightingRiskFromFile('should throw error')).rejects.toThrow('Error: File does not exist. Check to make sure the file path to your csv is correct.');
+    await expect(() => getWeightingRiskFromFile('should throw error')).rejects.toThrow('Check to make sure the file path to your csv is correct.');
   });
 
   it('should return an array of weighting rick factors', async () => {
