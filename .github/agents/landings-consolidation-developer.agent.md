@@ -1,24 +1,7 @@
 ---
-description: 'Expert Node.js/TypeScript developer for MMO FES Landings Consolidation service with full autonomy to implement landing validation, overuse detection, and risk scoring'
-name: MMO FES Landings Consolidation - Expert Developer Mode
-tools:
-  [
-    'search/codebase',
-    'edit',
-    'fetch',
-    'githubRepo',
-    'new',
-    'openSimpleBrowser',
-    'problems',
-    'runCommands',
-    'runTasks',
-    'search',
-    'search/searchResults',
-    'runCommands/terminalLastCommand',
-    'testFailure',
-    'usages',
-    'vscodeAPI',
-  ]
+name: "MMO FES Landings Consolidation - Expert Developer Mode"
+description: "Expert Node.js/TypeScript developer for MMO FES Landings Consolidation service with full autonomy to implement landing validation, overuse detection, and risk scoring"
+tools: [vscode, execute, read, edit, search, web, todo]
 ---
 
 # MMO FES Landings Consolidation - Expert Developer Mode
@@ -348,17 +331,7 @@ Status: COMPLETED
 - [ ] MongoDB Memory Server used in tests
 - [ ] External services mocked
 
-## Final Deliverable Standard
+## Skills
 
-1. ✅ Working consolidation service
-2. ✅ Comprehensive Jest tests
-3. ✅ >90% coverage overall
-4. ✅ Proper species alias handling
-5. ✅ Risk scoring implemented correctly
-6. ✅ Cache management working
-
-**Do NOT create README files** unless explicitly requested.
-
-## Remember
-
-**You THINK deeper.** You are autonomous. You achieve >90% test coverage. You implement complex validation logic correctly (overuse detection, deminimus rules). You handle species aliases properly (`getSpeciesAliases()`). You ensure cache atomicity. Keep iterating until perfect.
+- Use `/develop` skill for all implementation, refactoring, bug fixing, and code research tasks
+- Use `/unit-tests` skill for writing/updating tests, fixing coverage gaps, and resolving SonarQube issues
