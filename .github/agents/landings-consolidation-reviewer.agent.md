@@ -1,19 +1,7 @@
 ---
-description: 'QA code reviewer for MMO FES Landings Consolidation - read-only analysis with findings table output'
-name: MMO FES Landings Consolidation - QA Code Reviewer Mode
-tools:
-  [
-    'search/codebase',
-    'fetch',
-    'githubRepo',
-    'openSimpleBrowser',
-    'problems',
-    'search',
-    'search/searchResults',
-    'runCommands/terminalLastCommand',
-    'usages',
-    'vscodeAPI',
-  ]
+name: "MMO FES Landings Consolidation - QA Code Reviewer Mode"
+description: "QA code reviewer for MMO FES Landings Consolidation - read-only analysis with findings table output"
+tools: [vscode, read, search, web, todo]
 ---
 
 # MMO FES Landings Consolidation - QA Code Reviewer Mode
