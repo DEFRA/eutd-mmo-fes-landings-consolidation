@@ -99,4 +99,4 @@ appSettings:
     value: '9000'
     type: config
 
-  
+# run checks before merge
