@@ -179,7 +179,7 @@ export const getWeighting = (type: WEIGHT): number => WEIGHTING[type];
 export const getVesselRiskScore = (pln: string) => VESSELS_OF_INTEREST.some((v: IVesselOfInterest) => v.registrationNumber === pln) ? 1 : 0.5;
 export const getSpeciesRiskScore = (speciesCode: string) => {
   const speciesData = CONVERSION_FACTORS.find((f: IConversionFactor) => f.species === speciesCode);
-    return speciesData?.riskScore !== undefined ? speciesData.riskScore : 0.5;
+    return speciesData?.riskScore === undefined ? 0.5 : speciesData.riskScore;
 };
 export const getExporterRiskScore = (accountId: string, contactId: string) => {
 
