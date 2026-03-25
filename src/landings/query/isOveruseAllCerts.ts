@@ -16,7 +16,7 @@ export const isOverusedAllCerts: (item: IConsolidateLandingItem) => boolean = (i
     return false;
   }
 
-  const isUsageAcrossMultipleCert = new Set(item.landings.reduce((ls: string[], l: ICatchCertificateLanding) => (!l.isPreApproved) ? [...ls, l.documentNumber] : ls, [])).size > 1;
+  const isUsageAcrossMultipleCert = new Set(item.landings.reduce((ls: string[], l: ICatchCertificateLanding) => (l.isPreApproved) ? ls : [...ls, l.documentNumber], [])).size > 1;
   if (!isUsageAcrossMultipleCert || !item.landedWeight) {
     return false;
   }

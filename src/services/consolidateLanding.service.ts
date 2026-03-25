@@ -176,7 +176,7 @@ const reduceSpeciedList = (speciesListFromDocument: string[], consolidatedLandin
   return speciesListFromDocument.reduce((acc: ICatchCertificateSpecies[], cur: string) => {
     const speciesAliases: string[] = getSpeciesAliases(cur);
 
-    const speciesMatch: boolean = consolidatedLanding.items.some((item: IConsolidateLandingItem) => item.species === cur || speciesAliases.some((s: string) => item.species === s));
+      const speciesMatch: boolean = consolidatedLanding.items.some((item: IConsolidateLandingItem) => item.species === cur || speciesAliases.includes(item.species));
     if (speciesMatch) {
       return acc;
     }
@@ -359,7 +359,7 @@ export const voidConsolidateLandings = async (documentNumber: string) => {
     logger.info(`[LANDING-CONSOLIDATION][DOCUMENT][${documentNumber}][VOID][NUMBER-OF-LANDING-ON-CC-WITH-RSS-NUMBER][${consolidateLandingToUpdate.rssNumber}-${consolidateLandingToUpdate.dateLanded}]`);
 
     consolidateLandingToUpdate.items.forEach((item: IConsolidateLandingItem) => {
-      item.landings = item.landings.reduce((acc: ICatchCertificateLanding[], cur: ICatchCertificateLanding) => cur.documentNumber !== documentNumber ? [...acc, cur] : acc, []);
+        item.landings = item.landings.reduce((acc: ICatchCertificateLanding[], cur: ICatchCertificateLanding) => cur.documentNumber === documentNumber ? acc : [...acc, cur], []);
       item.exportWeight = item.landings.reduce((acc: number, l: ICatchCertificateLanding) => acc + l.weight, 0);
       item.isOverusedAllCerts = isOverusedAllCerts(item);
       item.isWithinDeminimus = item.isWithinDeminimus && item.landings.some((l: ICatchCertificateLanding) => l.weight <= TOLERANCE_IN_KG);
