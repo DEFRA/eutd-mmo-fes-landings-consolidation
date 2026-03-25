@@ -185,22 +185,20 @@ export const getExporterRiskScore = (accountId: string, contactId: string) => {
 
   const defaultScore = 1;
 
-  if (!accountId && !contactId) {
-    return defaultScore;
-  }
+  if (accountId || contactId) {
+    if (EXPORTER_BEHAVIOUR.length) {
 
-  if (EXPORTER_BEHAVIOUR.length) {
+      if (accountId) {
+        const otherMatches = checkOtherMatches(accountId, contactId);
+        if (otherMatches) {
+          return otherMatches;
+        }
+      } else {
+        const individual = EXPORTER_BEHAVIOUR.find((e: IExporterBehaviour) => e.contactId === contactId && !e.accountId);
 
-    if (accountId) {
-      const otherMatches = checkOtherMatches(accountId, contactId);
-      if (otherMatches) {
-        return otherMatches;
+        if (individual)
+          return individual.score;
       }
-    } else {
-      const individual = EXPORTER_BEHAVIOUR.find((e: IExporterBehaviour) => e.contactId === contactId && !e.accountId);
-
-      if (individual)
-        return individual.score;
     }
   }
 
