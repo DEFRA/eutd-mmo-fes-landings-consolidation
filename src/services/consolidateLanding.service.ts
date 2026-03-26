@@ -259,6 +259,8 @@ export const updateConsolidateLandings = async (documentNumber: string) => {
     }))
   );
 
+  const updatePromises: Promise<any>[] = [];
+
   for (const key in documentLandingsIdx) {
     const [pln, dateLanded] = key.split(',');
     const rssNumber = getRssNumber(pln, moment(dateLanded).format('YYYY-MM-DD'));
@@ -289,9 +291,14 @@ export const updateConsolidateLandings = async (documentNumber: string) => {
     });
 
     logger.info(`[LANDING-CONSOLIDATION][DOCUMENT][${documentNumber}][UPDATING-CONSOLIDATE-LANDING][${rssNumber}-${dateLanded}]`);
-    await updateConsolidateLanding(consolidatedLanded)
-      .catch((e: Error) => logger.error(`[LANDINGS-CONSOLIDATION][UPDATE-LANDINGS][ERROR][${e}]`));
+    updatePromises.push(
+      updateConsolidateLanding(consolidatedLanded)
+        .catch((e: Error) => logger.error(`[LANDINGS-CONSOLIDATION][UPDATE-LANDINGS][ERROR][${e}]`))
+    );
   }
+
+  // FI0-10854: batch all writes instead of await-in-loop
+  await Promise.all(updatePromises);
 
 };
 
@@ -355,7 +362,8 @@ export const voidConsolidateLandings = async (documentNumber: string) => {
   const consolidateLandingsToUpdate: IConsolidateLanding[] = await getConsolidationLandingsByDocumentNumber(documentNumber);
   logger.info(`[LANDING-CONSOLIDATION][DOCUMENT][${documentNumber}][VOID][CONSOLIDATED-LANDINGS][${consolidateLandingsToUpdate.length}]`);
 
-  for (const consolidateLandingToUpdate of consolidateLandingsToUpdate) {
+  // FI0-10854: parallelize independent void updates
+  const voidUpdatePromises = consolidateLandingsToUpdate.map(async (consolidateLandingToUpdate) => {
     logger.info(`[LANDING-CONSOLIDATION][DOCUMENT][${documentNumber}][VOID][NUMBER-OF-LANDING-ON-CC-WITH-RSS-NUMBER][${consolidateLandingToUpdate.rssNumber}-${consolidateLandingToUpdate.dateLanded}]`);
 
     consolidateLandingToUpdate.items.forEach((item: IConsolidateLandingItem) => {
@@ -365,31 +373,37 @@ export const voidConsolidateLandings = async (documentNumber: string) => {
       item.isWithinDeminimus = item.isWithinDeminimus && item.landings.some((l: ICatchCertificateLanding) => l.weight <= TOLERANCE_IN_KG);
     });
 
-    await updateConsolidateLanding(consolidateLandingToUpdate)
-      .catch(e => logger.error(`[LANDINGS-CONSOLIDATION][VOID-LANDINGS][ERROR][${e}]`));
-  }
+    try {
+      return await updateConsolidateLanding(consolidateLandingToUpdate);
+    } catch (e) {
+      return logger.error(`[LANDINGS-CONSOLIDATION][VOID-LANDINGS][ERROR][${e}]`);
+    }
+  });
+
+  await Promise.all(voidUpdatePromises);
 
 };
 
 export const findAllCatchCertificates = async (landings: ILanding[]): Promise<CatchCertificate[]> => {
-  let allCatchCertificates: CatchCertificate[] = [];
+  // FI0-10854: parallelize independent DB reads instead of sequential loop
+  const results = await Promise.all(
+    landings.map(async (landing) => {
+      const rssNumber = landing.rssNumber;
+      const dateLanded = moment.utc(landing.dateTimeLanded).format('YYYY-MM-DD');
 
-  for (const landing of landings) {
-    const rssNumber = landing.rssNumber;
-    const dateLanded = moment.utc(landing.dateTimeLanded).format('YYYY-MM-DD');
+      logger.info(`[LANDINGS-CONSOLIDATION][FINDING-USAGES-FOR][${rssNumber}-${dateLanded}]`);
 
-    logger.info(`[LANDINGS-CONSOLIDATION][FINDING-USAGES-FOR][${rssNumber}-${dateLanded}]`);
+      const landingDetail: ILandingDetail | undefined = getPlnsForLanding({ rssNumber, dateLanded });
 
-    const landingDetail: ILandingDetail | undefined = getPlnsForLanding({ rssNumber, dateLanded });
+      logger.info(`[LANDINGS-CONSOLIDATION][FOUND-PLN][${landingDetail.rssNumber}-${landingDetail.dateLanded}][PLN: ${landingDetail.pln}]`);
 
-    logger.info(`[LANDINGS-CONSOLIDATION][FOUND-PLN][${landingDetail.rssNumber}-${landingDetail.dateLanded}][PLN: ${landingDetail.pln}]`);
+      const affectedCatchCerts: CatchCertificate[] = await getCatchCertificates({ pln: landingDetail.pln, dateLanded: landingDetail.dateLanded });
+      logger.info(`[LANDINGS-CONSOLIDATION][NUMBER-OF-CATCH-CERTIFICATE-REFERENCING][${rssNumber}-${dateLanded}][${affectedCatchCerts.length}]`);
+      return affectedCatchCerts;
+    })
+  );
 
-    const affectedCatchCerts: CatchCertificate[] = await getCatchCertificates({ pln: landingDetail.pln, dateLanded: landingDetail.dateLanded });
-    allCatchCertificates = allCatchCertificates.concat(affectedCatchCerts);
-    logger.info(`[LANDINGS-CONSOLIDATION][NUMBER-OF-CATCH-CERTIFICATE-REFERENCING][${rssNumber}-${dateLanded}][${affectedCatchCerts.length}]`);
-  }
-
-  return allCatchCertificates;
+  return results.flat();
 };
 
 export const getLandingsRefresh = async (): Promise<ILandingDetail[]> => {
