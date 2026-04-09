@@ -6,15 +6,13 @@ export class ApplicationConfig {
   public inDev: boolean;
   public instrumentationKey: string;
   public cloudRoleName: string;
-  public basicAuthUser: string | any;
-  public basicAuthPassword: string | any;
-  public dbConnectionUri: string | any;
-  public dbName: string | any;
+  public basicAuthUser: string;
+  public basicAuthPassword: string;
+  public dbConnectionUri: string;
+  public dbName: string;
   public blobStorageConnection: string;
   public scheduleFishCountriesAndSpeciesJob: string;
   public scheduleVesselsDataJob: string;
-
-  public constructor() { }
 
   public static loadEnv(env: any): void {
     ApplicationConfig.prototype.basicAuthUser = env.REF_SERVICE_BASIC_AUTH_USER;
