@@ -22,15 +22,12 @@ export const transformLandings = (landings: ILanding[]): IConsolidateLanding[] =
         .sortBy('species')
         .groupBy('species')
         .map((_items: ILandingAggregatedItemBreakdown[], species: string) => {
-          for (const landing of _items) {
+          const isEstimate = _items.some((landing: ILandingAggregatedItemBreakdown) => !(landing.source && landing.source === LandingSources.LandingDeclaration));
+          const landedWeight = _items.reduce((total: number, landing: ILandingAggregatedItemBreakdown) => {
             const factor = landing.factor ? landing.factor : 1;
-            const isEstimate = !(landing.source && landing.source === LandingSources.LandingDeclaration)
-            return {
-              species,
-              isEstimate,
-              landedWeight: factor * landing.weight
-            }
-          }
+            return total + factor * landing.weight;
+          }, 0);
+          return { species, isEstimate, landedWeight };
         }).value()
     })).value()
 

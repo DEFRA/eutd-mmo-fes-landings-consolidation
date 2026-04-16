@@ -157,9 +157,9 @@ export const updateConversionFactorCache = (factors: IConversionFactor[]) => {
         species: factorData.species,
         state: factorData.state,
         presentation: factorData.presentation,
-        toLiveWeightFactor: isNaN(factorData.toLiveWeightFactor) ? undefined : Number(factorData.toLiveWeightFactor),
-        quotaStatus: factorData.quotaStatus,
-        riskScore: isNaN(factorData.riskScore) ? undefined : Number(factorData.riskScore)
+          toLiveWeightFactor: Number.isNaN(Number(factorData.toLiveWeightFactor)) ? undefined : Number(factorData.toLiveWeightFactor),
+          quotaStatus: factorData.quotaStatus,
+          riskScore: Number.isNaN(Number(factorData.riskScore)) ? undefined : Number(factorData.riskScore)
       }
     });
   }
@@ -176,30 +176,28 @@ export const getVesselsData: () => IVessel[] = () => { return VESSELS };
 export const getVesselsIdx: () => (pln: string) => any = () => { return VESSELS_IDX };
 export const getRiskThreshold = (): number => WEIGHTING['threshold'];
 export const getWeighting = (type: WEIGHT): number => WEIGHTING[type];
-export const getVesselRiskScore = (pln: string) => VESSELS_OF_INTEREST.find((v: IVesselOfInterest) => v && v.registrationNumber === pln) ? 1 : 0.5;
+export const getVesselRiskScore = (pln: string) => VESSELS_OF_INTEREST.some((v: IVesselOfInterest) => v.registrationNumber === pln) ? 1 : 0.5;
 export const getSpeciesRiskScore = (speciesCode: string) => {
   const speciesData = CONVERSION_FACTORS.find((f: IConversionFactor) => f.species === speciesCode);
-  return speciesData && speciesData.riskScore !== undefined ? speciesData.riskScore : 0.5;
+    return speciesData?.riskScore === undefined ? 0.5 : speciesData.riskScore;
 };
 export const getExporterRiskScore = (accountId: string, contactId: string) => {
 
-  const defaultScore = 1.0;
+  const defaultScore = 1;
 
-  if (!accountId && !contactId) {
-    return defaultScore;
-  }
+  if (accountId || contactId) {
+    if (EXPORTER_BEHAVIOUR.length) {
 
-  if (EXPORTER_BEHAVIOUR.length) {
+      if (accountId) {
+        const otherMatches = checkOtherMatches(accountId, contactId);
+        if (otherMatches) {
+          return otherMatches;
+        }
+      } else {
+        const individual = EXPORTER_BEHAVIOUR.find((e: IExporterBehaviour) => e.contactId === contactId && !e.accountId);
 
-    if (!accountId) {
-      const individual = EXPORTER_BEHAVIOUR.find((e: IExporterBehaviour) => e.contactId === contactId && !e.accountId);
-
-      if (individual)
-        return individual.score;
-    } else {
-      const otherMatches = checkOtherMatches(accountId, contactId);
-      if (otherMatches) {
-        return otherMatches;
+        if (individual)
+          return individual.score;
       }
     }
   }

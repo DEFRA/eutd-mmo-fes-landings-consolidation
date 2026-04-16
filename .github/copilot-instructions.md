@@ -112,3 +112,7 @@ The main consolidation flow in `consolidateLanding.service.ts`:
 - **Overuse**: Export weight exceeds landed weight across all certificates
 - **Deminimus**: Species weight differences within 50kg tolerance
 - **Retrospective**: Landing data within expected timeframes
+
+## Skills
+
+Use `/develop` for implementation, coding, and research tasks. Use `/unit-tests` for writing tests, coverage, and SonarQube issues.
