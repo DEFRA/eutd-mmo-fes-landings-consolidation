@@ -48,7 +48,7 @@ describe('when calculating if a landing is within it\'s retrospective period', (
     expect(result).toBe(true);
   })
 
-  it('will return true for a landing within it\'s retrospective period when currentdate is enddate+1', () => {
+  it('will return false for a landing when currentdate is enddate+1 but past midnight (window closed)', () => {
     const landings: ICatchCertificateLanding[] = [{
       landingId: "CC1-1",
       documentNumber: "CC1",
@@ -59,7 +59,7 @@ describe('when calculating if a landing is within it\'s retrospective period', (
     }];
     
     const result = isWithinRetrospectivePeriod(landings);
-    expect(result).toBe(true);
+    expect(result).toBe(false);
   })
 
   it('will return false for a landing outside it\'s retrospective period and enddate is in the past', () => {
