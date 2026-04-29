@@ -4,7 +4,7 @@ import moment from 'moment';
 import { ILanding, ILandingItem, LandingSources, ILandingAggregatedItemBreakdown, ILandingQuery } from "mmo-shared-reference-data";
 import { Catch, CatchCertificate, IConsolidateLanding, ILandingDetail, ILandingSpeciesIdx, Product } from '../../types';
 import { getRssNumber } from '../../services/vessel.service';
-import { isDocumentPreApproved } from '../persistence/preApprovedDocument';
+import { getPreApprovedDocumentsMap } from '../persistence/preApprovedDocument';
 import { getTotalRiskScore, isHighRisk } from '../../data/risking';
 import logger from '../../logger';
 
@@ -31,12 +31,18 @@ export const transformLandings = (landings: ILanding[]): IConsolidateLanding[] =
         }).value()
     })).value()
 
-export const buildLandingsSpeciesIdx = async (documents: CatchCertificate[], landing: ILandingDetail): Promise<ILandingSpeciesIdx> => {
+// FI0-11132: accept optional pre-fetched approval map to avoid N+1 queries
+export const buildLandingsSpeciesIdx = async (documents: CatchCertificate[], landing: ILandingDetail, preApprovedMap?: Map<string, boolean>): Promise<ILandingSpeciesIdx> => {
   const speciesIdx: ILandingSpeciesIdx = {};
+
+  // If no map provided, batch-fetch all approvals upfront
+  const approvalMap = preApprovedMap ?? await getPreApprovedDocumentsMap(
+    documents.filter(d => d.exportData).map(d => d.documentNumber)
+  );
 
   for (const document of documents) {
     if (document.exportData) {
-      const isDocumentApproved = await isDocumentPreApproved(document.documentNumber);
+      const isDocumentApproved = approvalMap.get(document.documentNumber) || false;
       const products: Product[] = document.exportData.products;
       products.forEach((product: Product) => {
         if (product.caughtBy) {
@@ -66,11 +72,17 @@ export const buildLandingsSpeciesIdx = async (documents: CatchCertificate[], lan
   return speciesIdx;
 }
 
-export const buildDocumentLandingsList = async (documents: CatchCertificate[], landingsIdx: any): Promise<any[]> => {
+// FI0-11132: accept optional pre-fetched approval map to avoid N+1 queries
+export const buildDocumentLandingsList = async (documents: CatchCertificate[], landingsIdx: any, preApprovedMap?: Map<string, boolean>): Promise<any[]> => {
   const list: any[] = [];
 
+  // If no map provided, batch-fetch all approvals upfront
+  const approvalMap = preApprovedMap ?? await getPreApprovedDocumentsMap(
+    documents.filter(d => d.exportData).map(d => d.documentNumber)
+  );
+
   for (const document of documents) {
-    const isDocumentApproved = await isDocumentPreApproved(document.documentNumber);
+    const isDocumentApproved = approvalMap.get(document.documentNumber) || false;
     if (document.exportData) {
       document.exportData.products.forEach((product: Product) => {
         if (product.caughtBy) {

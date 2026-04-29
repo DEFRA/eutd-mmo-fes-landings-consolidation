@@ -1,5 +1,5 @@
 import { ILandingQuery, LandingSources, generateIndex } from "mmo-shared-reference-data";
-import { buildLandingsSpeciesIdx, mapPlnLandingsToRssLandings, transformLandings, uniquifyLandings } from "../../../src/landings/transformations/landing";
+import { buildDocumentLandingsList, buildLandingsSpeciesIdx, mapPlnLandingsToRssLandings, transformLandings, uniquifyLandings } from "../../../src/landings/transformations/landing";
 import { CatchCertificate, IConsolidateLanding, ILandingDetail, ILandingSpeciesIdx } from "../../../src/types";
 import * as Cache from '../../../src/data/cache';
 import * as PreApprovedDocument from '../../../src/landings/persistence/preApprovedDocument';
@@ -136,18 +136,18 @@ describe('when transforming landings', () => {
 
 describe('when building a dictionary of landings indexable by species', () => {
 
-  let mockIsDocumentPreApproved: jest.SpyInstance;
+  let mockGetPreApprovedDocumentsMap: jest.SpyInstance;
   let mockIsHighRisk: jest.SpyInstance;
 
   beforeEach(() => {
-    mockIsDocumentPreApproved = jest.spyOn(PreApprovedDocument, 'isDocumentPreApproved');
-    mockIsDocumentPreApproved.mockResolvedValue(false);
+    mockGetPreApprovedDocumentsMap = jest.spyOn(PreApprovedDocument, 'getPreApprovedDocumentsMap');
+    mockGetPreApprovedDocumentsMap.mockResolvedValue(new Map());
 
     mockIsHighRisk = jest.spyOn(Risking, 'isHighRisk');
   })
 
   afterEach(() => {
-    mockIsDocumentPreApproved.mockRestore();
+    mockGetPreApprovedDocumentsMap.mockRestore();
     mockIsHighRisk.mockRestore();
   })
 
@@ -205,6 +205,42 @@ describe('when building a dictionary of landings indexable by species', () => {
 
     const result = await buildLandingsSpeciesIdx(documents, landing);
     expect(result).toStrictEqual(speciesIdx);
+  })
+
+  it('should use the provided preApprovedMap and skip auto-fetch', async () => {
+    const landing: ILandingDetail = { pln: 'WA1', dateLanded: '2023-10-09', rssNumber: 'rssWA1' };
+    const documents: CatchCertificate[] = [{
+      status: "COMPLETE",
+      documentNumber: "CC1",
+      createdAt: new Date("2019-07-10T08:26:06.939Z"),
+      createdBy: "Bob",
+      createdByEmail: "foo@foo.com",
+      exportData: {
+        products: [{
+          speciesId: "CC1-1-COD",
+          speciesCode: "COD",
+          state: { code: "FRE", name: "Fresh" },
+          presentation: { code: "WHL", name: "Whole" },
+          factor: 2,
+          caughtBy: [{
+            id: "CC1-1",
+            vessel: "DAYBREAK",
+            pln: "WA1",
+            date: "2023-10-09",
+            weight: 100,
+            dataEverExpected: true,
+            landingDataExpectedDate: "2023-10-11",
+            landingDataEndDate: "2023-10-13"
+          }]
+        }]
+      }
+    }];
+
+    const preApprovedMap = new Map([['CC1', true]]);
+    const result = await buildLandingsSpeciesIdx(documents, landing, preApprovedMap);
+
+    expect(result['COD'][0].isPreApproved).toBe(true);
+    expect(mockGetPreApprovedDocumentsMap).not.toHaveBeenCalled();
   })
 
   it('should build a dictionary with COD across multiple documents', async () => {
@@ -967,7 +1003,7 @@ describe('when building a dictionary of landings indexable by species', () => {
   })
 
   it('should build a dictionary with COD for a pre approved document', async () => {
-    mockIsDocumentPreApproved.mockResolvedValue(true);
+    mockGetPreApprovedDocumentsMap.mockResolvedValue(new Map([['CC1', true]]));
 
     const landing: ILandingDetail = { pln: 'WA1', dateLanded: '2023-10-09', rssNumber: 'rssWA1' };
     const speciesIdx: ILandingSpeciesIdx = {
@@ -1310,4 +1346,36 @@ describe('when uniquifying the landings', () => {
     expect(expectedResult).toStrictEqual(result);
   });
   
+});
+
+describe('buildDocumentLandingsList without preApprovedMap', () => {
+
+  let mockGetPreApprovedDocumentsMap: jest.SpyInstance;
+
+  beforeEach(() => {
+    mockGetPreApprovedDocumentsMap = jest.spyOn(PreApprovedDocument, 'getPreApprovedDocumentsMap');
+    mockGetPreApprovedDocumentsMap.mockResolvedValue(new Map());
+  });
+
+  afterEach(() => {
+    mockGetPreApprovedDocumentsMap.mockRestore();
+  });
+
+  it('should auto-fetch the approval map when preApprovedMap is not provided', async () => {
+    const documents: CatchCertificate[] = [{
+      status: "COMPLETE",
+      documentNumber: "CC1",
+      createdAt: new Date("2019-07-10T08:26:06.939Z"),
+      createdBy: "Bob",
+      createdByEmail: "foo@foo.com",
+      exportData: {
+        products: []
+      }
+    }];
+
+    const result = await buildDocumentLandingsList(documents, {});
+
+    expect(mockGetPreApprovedDocumentsMap).toHaveBeenCalledWith(['CC1']);
+    expect(result).toEqual([]);
+  });
 });
