@@ -2,6 +2,7 @@ const _ = require('lodash');
 import moment from "moment";
 import { getCatchCertificate, getCatchCertificates } from "../landings/persistence/document";
 import { getPlnsForLanding, getRssNumber } from "./vessel.service";
+import { getPreApprovedDocumentsMap } from "../landings/persistence/preApprovedDocument";
 import {
   buildDocumentLandingsList,
   buildLandingsSpeciesIdx,
@@ -244,13 +245,18 @@ export const updateConsolidateLandings = async (documentNumber: string) => {
   const allCatchCertificates: CatchCertificate[] = await findAllCatchCertificates(landings);
   logger.info(`[LANDINGS-CONSOLIDATION][TOTAL-NUMBER-OF-CATCH-CERTIFICATES][${allCatchCertificates.length}]`);
 
+  // FI0-11132: batch-fetch all pre-approval statuses in one query instead of N+1
+  const preApprovedMap = await getPreApprovedDocumentsMap(
+    allCatchCertificates.filter(c => c.exportData).map(c => c.documentNumber)
+  );
+
   const aggregatedLandings: ILandingAggregated[] = aggregateOnLandingDate(landings);
 
   const landingsIdx = aggregatedLandings.reduce((acc, cur) => ({ ...acc, [cur.rssNumber + cur.dateLanded]: cur }), {});
 
   logger.info(`[LANDING-CONSOLIDATION][DOCUMENT][${documentNumber}][LANDINGS-INDEXED]`);
 
-  const documentLandingsIdx = _.groupBy(await buildDocumentLandingsList(allCatchCertificates, landingsIdx), (o: any) => o.pln + ',' + o.dateLanded);
+  const documentLandingsIdx = _.groupBy(await buildDocumentLandingsList(allCatchCertificates, landingsIdx, preApprovedMap), (o: any) => o.pln + ',' + o.dateLanded);
 
   const consolidatedLandingsByRssNumber: IConsolidateLanding[] = await getConsolidationLandingsByRssNumber(
     landings.map(({ rssNumber, dateTimeLanded }) => ({
