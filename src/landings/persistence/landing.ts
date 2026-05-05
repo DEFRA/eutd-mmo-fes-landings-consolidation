@@ -1,5 +1,4 @@
 import moment from 'moment';
-import { isEqual } from 'lodash';
 import { ILanding, ILandingQuery } from 'mmo-shared-reference-data';
 import { LandingModel } from '../../types'
 import logger from '../../logger';
@@ -17,37 +16,41 @@ export const getLandings = async (startDate: string, endDate: string): Promise<I
   return await LandingModel.find(query).lean();
 }
 
+// FI0-11132: batch all landing queries into a single $or query instead of N+1 sequential queries
 export const getLandingsMultiple = async (landings: ILandingQuery[]): Promise<ILanding[]> => {
 
   logger.info(`[LANDINGS-CONSOLIDATION][GET-MULTIPLE-LANDINGS][LENGTH][${landings.length}]`);
 
   if (landings.length === 0) return []
 
-  const landingsMultiple:ILanding[] = [];
-
-  for (const landing of landings) {
-
+  const conditions = landings.map(landing => {
     const theDay = moment.utc(landing.dateLanded);
 
     logger.info(`[LANDINGS-CONSOLIDATION][GET-MULTIPLE-LANDINGS][LANDING][RSS-NUMBER][${landing.rssNumber}]`);
 
-    const query = {
+    return {
       rssNumber: landing.rssNumber,
       dateTimeLanded: {
-        $gte: theDay.startOf('day').toDate(),
-        $lte: theDay.endOf('day').toDate()
+        $gte: theDay.clone().startOf('day').toDate(),
+        $lte: theDay.clone().endOf('day').toDate()
       }
+    };
+  });
+
+  logger.info(`[LANDINGS-CONSOLIDATION][GET-MULTIPLE-LANDINGS][QUERY][BATCHED-${conditions.length}-CONDITIONS]`);
+
+  const landingsMultiple: ILanding[] = await LandingModel.find({ $or: conditions }).lean();
+
+  logger.info(`[LANDINGS-CONSOLIDATION][GET-MULTIPLE-LANDINGS][RESULTS][${landingsMultiple.length}]`);
+
+  // FI0-11132: O(n) dedup using composite key instead of O(n²) isEqual deep comparison
+  const seen = new Map<string, ILanding>();
+  for (const landing of landingsMultiple) {
+    const key = `${landing.rssNumber}|${landing.dateTimeLanded}|${JSON.stringify(landing.items)}`;
+    if (!seen.has(key)) {
+      seen.set(key, landing);
     }
-
-    logger.info(`[LANDINGS-CONSOLIDATION][GET-MULTIPLE-LANDINGS][QUERY][${JSON.stringify(query)}]`);
-
-    const landings = await LandingModel.find(query).lean();
-
-    logger.info(`[LANDINGS-CONSOLIDATION][GET-MULTIPLE-LANDINGS][LANDING-FROM-MONGO][${JSON.stringify(landings)}]`);
-
-    landingsMultiple.push(...landings);
   }
 
-  return landingsMultiple.reduce((ls: ILanding[], landing: ILanding) =>
-    ls.some((l: ILanding) => isEqual(l, landing)) ? ls : [...ls, landing], []);
+  return [...seen.values()];
 }
