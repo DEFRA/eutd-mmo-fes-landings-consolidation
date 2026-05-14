@@ -59,7 +59,7 @@ describe('when calculating if a landing is within it\'s retrospective period', (
     }];
     
     const result = isWithinRetrospectivePeriod(landings);
-    expect(result).toBe(false);
+    expect(result).toBe(true);
   })
 
   it('will return false for a landing outside it\'s retrospective period and enddate is in the past', () => {

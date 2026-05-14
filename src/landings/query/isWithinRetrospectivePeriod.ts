@@ -6,7 +6,7 @@ export const isWithinRetrospectivePeriod: (landings: ICatchCertificateLanding[])
     landing.dataEverExpected &&
     landing.landingDataExpectedDate &&
     landing.landingDataEndDate &&
-    moment.utc().isBetween(moment.utc(landing.landingDataExpectedDate), moment.utc(landing.landingDataEndDate).add(1, 'day').startOf('day'), undefined, "[]")
+    moment.utc().isBetween(moment.utc(landing.landingDataExpectedDate), moment.utc(landing.landingDataEndDate).add(1, 'day'), 'day', "[]")
   )
 
 export const isRetrospectiveCheckRequired: (landing: ICatchCertificateLanding | ICatchCertificateSpecies) => boolean = (landing: ICatchCertificateLanding | ICatchCertificateSpecies) =>
