@@ -4,6 +4,7 @@ import * as LocalFile from '../../../src/data/local-file';
 import * as SUT from '../../../src/landings/persistence/risking';
 import type { IVesselOfInterest, IWeighting } from 'mmo-shared-reference-data';
 import logger from '../../../src/logger';
+import { createMongoMemoryServer } from '../../../src/test-utils/mongo-memory-server';
 
 const mongoose = require('mongoose');
 
@@ -11,7 +12,7 @@ let mongoServer: MongoMemoryServer;
 const opts = { connectTimeoutMS:60000, socketTimeoutMS:600000, serverSelectionTimeoutMS:60000 }
 
 beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
+    mongoServer = await createMongoMemoryServer();
     const mongoUri = mongoServer.getUri();
     await mongoose.connect(mongoUri, opts).catch((err: Error) => {console.log(err)});
   });

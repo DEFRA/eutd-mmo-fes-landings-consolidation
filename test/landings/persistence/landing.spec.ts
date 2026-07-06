@@ -7,6 +7,7 @@ import { LandingModel } from '../../../src/types/landing';
 import { ApplicationConfig } from '../../../src/config';
 import * as SUT from '../../../src/landings/persistence/landing';
 import logger from '../../../src/logger';
+import { createMongoMemoryServer } from '../../../src/test-utils/mongo-memory-server';
 
 ApplicationConfig.loadEnv({});
 
@@ -61,7 +62,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
   const opts = { connectTimeoutMS: 60000, socketTimeoutMS: 600000, serverSelectionTimeoutMS: 60000 }
 
   beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
+    mongoServer = await createMongoMemoryServer();
     const mongoUri = mongoServer.getUri();
     await mongoose.connect(mongoUri, opts).catch(err => { console.log(err) });
   });

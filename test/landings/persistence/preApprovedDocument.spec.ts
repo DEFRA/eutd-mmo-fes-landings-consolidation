@@ -2,6 +2,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import { DocumentStatuses } from "mmo-shared-reference-data";
 import { isDocumentPreApproved } from '../../../src/landings/persistence/preApprovedDocument';
 import { CatchCertificateModel, PreApprovedDocumentModel } from "../../../src/types";
+import { createMongoMemoryServer } from '../../../src/test-utils/mongo-memory-server';
 
 const mongoose = require('mongoose');
 
@@ -29,7 +30,7 @@ describe('Pre approved documents', () => {
   };
 
   beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
+    mongoServer = await createMongoMemoryServer();
     const mongoUri = mongoServer.getUri();
     await mongoose.connect(mongoUri, opts).catch(err => { console.log(err) });
   });

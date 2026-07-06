@@ -7,6 +7,7 @@ import * as SUT from '../../../src/landings/persistence/consolidateLanding';
 import * as VesselService from '../../../src/services/vessel.service';
 import logger from '../../../src/logger';
 import moment from 'moment';
+import { createMongoMemoryServer } from '../../../src/test-utils/mongo-memory-server';
 
 const buildLandingsConsolidateLandingsCollection = async () => {
   let consolidatedLanded = new ConsolidateLandingModel({
@@ -125,7 +126,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
   const opts = { connectTimeoutMS: 60000, socketTimeoutMS: 600000, serverSelectionTimeoutMS: 60000 }
 
   beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
+    mongoServer = await createMongoMemoryServer();
     const mongoUri = mongoServer.getUri();
     await mongoose.connect(mongoUri, opts).catch((err: Error) => { console.log(err) });
   });

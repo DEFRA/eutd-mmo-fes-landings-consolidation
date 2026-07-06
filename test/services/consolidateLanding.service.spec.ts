@@ -10,6 +10,7 @@ import { CatchCertificateModel, ConsolidateLandingModel, IConsolidateLanding, La
 import { ILanding, LandingSources, generateIndex } from 'mmo-shared-reference-data';
 import logger from '../../src/logger';
 import moment from 'moment';
+import { createMongoMemoryServer } from '../../src/test-utils/mongo-memory-server';
 
 const buildLandingsConsolidateLandingsCollection = async () => {
   let consolidatedLanded = new ConsolidateLandingModel({
@@ -329,7 +330,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
   const vesselsIdx = generateIndex(vesselData);
 
   beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
+    mongoServer = await createMongoMemoryServer();
     const mongoUri = mongoServer.getUri();
     await mongoose.connect(mongoUri, opts).catch((err: Error) => { console.log(err) });
   });

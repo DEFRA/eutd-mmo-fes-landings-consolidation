@@ -3,6 +3,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { CatchCertModel, CatchCertificate, CatchCertificateModel, IDocumentLandingQuery } from "../../../src/types";
 import { getCatchCertificate, getCatchCertificates } from "../../../src/landings/persistence/document";
 import { DocumentStatuses } from "mmo-shared-reference-data";
+import { createMongoMemoryServer } from '../../../src/test-utils/mongo-memory-server';
 
 describe('MongoMemoryServer - Fetching catch certificates', () => {
 
@@ -10,7 +11,7 @@ describe('MongoMemoryServer - Fetching catch certificates', () => {
   const opts = {}
 
   beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
+    mongoServer = await createMongoMemoryServer();
     const mongoUri = mongoServer.getUri();
     await mongoose.connect(mongoUri, opts).catch(err => { console.log(err) });
   });

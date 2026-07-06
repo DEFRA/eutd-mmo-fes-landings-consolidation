@@ -108,6 +108,9 @@
             "text",
             "cobertura"
         ],
+        "coveragePathIgnorePatterns": [
+            "src/test-utils/mongo-memory-server.ts"
+        ],
         "coverageThreshold": {
             "global": {
                 "statements": 100,
