@@ -1,7 +1,6 @@
 const moment = require('moment');
 const mongoose = require('mongoose');
 
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import { ILanding, LandingSources } from 'mmo-shared-reference-data';
 import { LandingModel } from '../../../src/types/landing';
 import { ApplicationConfig } from '../../../src/config';
