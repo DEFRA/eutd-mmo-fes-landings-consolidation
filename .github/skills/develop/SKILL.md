@@ -1,6 +1,10 @@
 ---
 name: develop
 description: 'Expert Node.js/TypeScript/Hapi developer for MMO FES Landings Consolidation. Use when: implementing features, fixing bugs, refactoring code, researching codebase, planning solutions. Covers consolidation pipeline, species matching, overuse detection, risk scoring.'
+license: OGL-UK-3.0
+metadata:
+  author: mmo-fes
+  version: "1.0"
 ---
 
 # Landings Consolidation — Developer Skill
