@@ -20,7 +20,11 @@ Expert in writing and maintaining unit tests for the MMO FES Landings Consolidat
 
 ## Coverage Requirements
 
-- **Overall target**: >90% line coverage
+Tiered targets (never drop below the project or SonarCloud baseline):
+
+- **Global**: ≥90% (Statements / Branches / Functions / Lines)
+- **Core business logic** (consolidation pipeline, overuse/deminimus detection, risk scoring, species-alias matching): ≥95%
+- **Error-handling and security-critical paths**: 100%
 - Run tests: `npm test` (single run with coverage report)
 - Watch mode: `npm run test:watch`
 
