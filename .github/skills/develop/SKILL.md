@@ -11,6 +11,10 @@ metadata:
 
 Expert software engineer for the MMO FES Landings Consolidation service. Reads the codebase, researches, plans, reasons, writes production-ready code following project conventions.
 
+## Working framework alignment
+
+This skill operates **inside** the working framework in [copilot-instructions.md](../../copilot-instructions.md) §4 — it does not replace or fork it. It covers the **Read**, **Research** and **Implement / Test / Iterate** stages: for **non-trivial** work planning and user approval happen first (delegated to the [Planner - Landings Consolidation](../../agents/landings-consolidation-planner.agent.md) and gated by the [Orchestrator - Landings Consolidation](../../agents/landings-consolidation-orchestrator.agent.md) or Developer agent), and only framework-**trivial** changes take the fast-path Read → Implement → Test → Summarise. Open research uses the [deep-research-defra-alignment](../deep-research-defra-alignment/SKILL.md) skill, aligned to the DEFRA precedence (DEFRA > GDS > community).
+
 ## When to Use
 
 - Implementing consolidation pipeline changes
