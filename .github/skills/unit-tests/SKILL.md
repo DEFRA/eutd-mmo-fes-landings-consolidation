@@ -1,6 +1,10 @@
 ---
 name: unit-tests
 description: 'Expert unit test engineer for MMO FES Landings Consolidation. Use when: writing unit tests, updating tests for code changes, fixing failing tests, improving code coverage, fixing SonarQube issues.'
+license: OGL-UK-3.0
+metadata:
+  author: mmo-fes
+  version: "1.0"
 ---
 
 # Landings Consolidation — Unit Tests Skill
@@ -16,7 +20,11 @@ Expert in writing and maintaining unit tests for the MMO FES Landings Consolidat
 
 ## Coverage Requirements
 
-- **Overall target**: >90% line coverage
+Tiered targets (never drop below the project or SonarCloud baseline):
+
+- **Global**: ≥90% (Statements / Branches / Functions / Lines)
+- **Core business logic** (consolidation pipeline, overuse/deminimus detection, risk scoring, species-alias matching): ≥95%
+- **Error-handling and security-critical paths**: 100%
 - Run tests: `npm test` (single run with coverage report)
 - Watch mode: `npm run test:watch`
 
