@@ -635,29 +635,15 @@ describe('getSpeciesRiskScore', () => {
     SUT.updateConversionFactorCache(mockConversionFactors);
   });
 
-  it('should return default value when undefined riskScore', () => {
-    const speciesRisk = SUT.getSpeciesRiskScore('COD');
-    expect(speciesRisk).toBe(1);
-  });
-
-  it('should return default value when missing riskScore', () => {
-    const speciesRisk = SUT.getSpeciesRiskScore('WHO');
-    expect(speciesRisk).toBe(1);
-  });
-
-  it('should return riskScore value when riskScore is a number', () => {
-    const speciesRisk = SUT.getSpeciesRiskScore('LBE');
-    expect(speciesRisk).toBe(1);
-  });
-
-  it('should return riskScore value when riskScore is a string valid number', () => {
-    const speciesRisk = SUT.getSpeciesRiskScore('HER');
-    expect(speciesRisk).toBe(1);
-  });
-
-  it('should return default value when riskScore string is a string not valid number', () => {
-    const speciesRisk = SUT.getSpeciesRiskScore('ALB');
-    expect(speciesRisk).toBe(1);
+  it.each([
+    ['should return default value when undefined riskScore', 'COD', 1],
+    ['should return default value when missing riskScore', 'WHO', 1],
+    ['should return riskScore value when riskScore is a number', 'LBE', 1],
+    ['should return riskScore value when riskScore is a string valid number', 'HER', 1],
+    ['should return default value when riskScore string is a string not valid number', 'ALB', 1]
+  ])('%s', (_title, species, expectedScore) => {
+    const speciesRisk = SUT.getSpeciesRiskScore(species);
+    expect(speciesRisk).toBe(expectedScore);
   });
 
   it('should return default value when species data does not exist', () => {

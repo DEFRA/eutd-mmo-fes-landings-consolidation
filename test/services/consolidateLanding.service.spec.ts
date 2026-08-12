@@ -1769,65 +1769,36 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
     expect(results).toHaveLength(1)
   });
 
-    it('will not update the landings consolidate landings collection with entry for landing declarations with a species within deminimus', async () => {
-    const catchCert = new CatchCertificateModel({
-      status: "COMPLETE",
-      __t: "catchCert",
-      documentNumber: "CC1",
-      createdAt: "2019-07-10T08:26:06.939Z",
-      createdBy: "Bob",
-      createdByEmail: "foo@foo.com",
-      exportData: {
-        products: [
-          {
-            speciesId: "CC1-1-COD",
-            speciesCode: "COD",
-            state: {
-              code: "FRE",
-              name: "Fresh"
-            },
-            presentation: {
-              code: "FIS",
-              name: "Filleted and skinned"
-            },
-            factor: 1,
-            caughtBy: [
-              {
-                id: "CC1-1",
-                vessel: "DAYBREAK",
-                pln: "WA1",
-                date: "2023-10-09",
-                weight: 45,
-                dataEverExpected: true,
-                landingDataExpectedDate: "2023-10-11",
-                landingDataEndDate: moment.utc().format('YYYY-MM-DD')
-              }
-            ]
-          }
-        ]
-      }
-    });
-
-    await catchCert.save();
-
-    const transformedLandings: IConsolidateLanding[] = [{
-      dateLanded: "2023-10-09",
-      rssNumber: "rssWA1",
+  it.each([
+    {
+      name: 'will not update the landings consolidate landings collection with entry for landing declarations with a species within deminimus',
       source: LandingSources.LandingDeclaration,
-      items: [{
-        species: "COD",
-        landedWeight: 45,
-        isEstimate: true
-      }]
-    }];
-
-    await consolidateLandings(transformedLandings);
-
-    const results = await ConsolidateLandingModel.find({});
-    expect(results).toHaveLength(0);
-  });
-
-  it('will not update the landings consolidate landings collection with entry for elog species above the deminimus', async () => {
+      species: 'COD',
+      landedWeight: 45,
+      catchCertWeight: 45
+    },
+    {
+      name: 'will not update the landings consolidate landings collection with entry for elog species above the deminimus',
+      source: LandingSources.ELog,
+      species: 'HER',
+      landedWeight: 45,
+      catchCertWeight: 51
+    },
+    {
+      name: 'will not update the landings consolidate landings collection with entry for elog species within the deminimus on catch certificate',
+      source: LandingSources.ELog,
+      species: 'COD',
+      landedWeight: 45,
+      catchCertWeight: 45
+    },
+    {
+      name: 'will not update the landings consolidate landings collection with entry for elog species failure above the deminimus',
+      source: LandingSources.ELog,
+      species: 'HER',
+      landedWeight: 100,
+      catchCertWeight: 51
+    }
+  ])('$name', async ({ source, species, landedWeight, catchCertWeight }) => {
     const catchCert = new CatchCertificateModel({
       status: "COMPLETE",
       __t: "catchCert",
@@ -1855,7 +1826,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
                 vessel: "DAYBREAK",
                 pln: "WA1",
                 date: "2023-10-09",
-                weight: 51,
+                weight: catchCertWeight,
                 dataEverExpected: true,
                 landingDataExpectedDate: "2023-10-11",
                 landingDataEndDate: moment.utc().format('YYYY-MM-DD')
@@ -1871,126 +1842,10 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
     const transformedLandings: IConsolidateLanding[] = [{
       dateLanded: "2023-10-09",
       rssNumber: "rssWA1",
-      source: LandingSources.ELog,
+      source,
       items: [{
-        species: "HER",
-        landedWeight: 45,
-        isEstimate: true
-      }]
-    }];
-
-    await consolidateLandings(transformedLandings);
-
-    const results = await ConsolidateLandingModel.find({});
-    expect(results).toHaveLength(0);
-  });
-
-  it('will not update the landings consolidate landings collection with entry for elog species within the deminimus on catch certificate', async () => {
-    const catchCert = new CatchCertificateModel({
-      status: "COMPLETE",
-      __t: "catchCert",
-      documentNumber: "CC1",
-      createdAt: "2019-07-10T08:26:06.939Z",
-      createdBy: "Bob",
-      createdByEmail: "foo@foo.com",
-      exportData: {
-        products: [
-          {
-            speciesId: "CC1-1-COD",
-            speciesCode: "COD",
-            state: {
-              code: "FRE",
-              name: "Fresh"
-            },
-            presentation: {
-              code: "FIS",
-              name: "Filleted and skinned"
-            },
-            factor: 1,
-            caughtBy: [
-              {
-                id: "CC1-1",
-                vessel: "DAYBREAK",
-                pln: "WA1",
-                date: "2023-10-09",
-                weight: 45,
-                dataEverExpected: true,
-                landingDataExpectedDate: "2023-10-11",
-                landingDataEndDate: moment.utc().format('YYYY-MM-DD')
-              }
-            ]
-          }
-        ]
-      }
-    });
-
-    await catchCert.save();
-
-    const transformedLandings: IConsolidateLanding[] = [{
-      dateLanded: "2023-10-09",
-      rssNumber: "rssWA1",
-      source: LandingSources.ELog,
-      items: [{
-        species: "COD",
-        landedWeight: 45,
-        isEstimate: true
-      }]
-    }];
-
-    await consolidateLandings(transformedLandings);
-
-    const results = await ConsolidateLandingModel.find({});
-    expect(results).toHaveLength(0);
-  });
-
-  it('will not update the landings consolidate landings collection with entry for elog species failure above the deminimus', async () => {
-    const catchCert = new CatchCertificateModel({
-      status: "COMPLETE",
-      __t: "catchCert",
-      documentNumber: "CC1",
-      createdAt: "2019-07-10T08:26:06.939Z",
-      createdBy: "Bob",
-      createdByEmail: "foo@foo.com",
-      exportData: {
-        products: [
-          {
-            speciesId: "CC1-1-COD",
-            speciesCode: "COD",
-            state: {
-              code: "FRE",
-              name: "Fresh"
-            },
-            presentation: {
-              code: "FIS",
-              name: "Filleted and skinned"
-            },
-            factor: 1,
-            caughtBy: [
-              {
-                id: "CC1-1",
-                vessel: "DAYBREAK",
-                pln: "WA1",
-                date: "2023-10-09",
-                weight: 51,
-                dataEverExpected: true,
-                landingDataExpectedDate: "2023-10-11",
-                landingDataEndDate: moment.utc().format('YYYY-MM-DD')
-              }
-            ]
-          }
-        ]
-      }
-    });
-
-    await catchCert.save();
-
-    const transformedLandings: IConsolidateLanding[] = [{
-      dateLanded: "2023-10-09",
-      rssNumber: "rssWA1",
-      source: LandingSources.ELog,
-      items: [{
-        species: "HER",
-        landedWeight: 100,
+        species,
+        landedWeight,
         isEstimate: true
       }]
     }];
