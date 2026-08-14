@@ -1,9 +1,7 @@
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { connectTestMongo, disconnectTestMongo } from '../../helpers/mongoTestConnection';
 import { DocumentStatuses } from "mmo-shared-reference-data";
 import { isDocumentPreApproved } from '../../../src/landings/persistence/preApprovedDocument';
 import { CatchCertificateModel, PreApprovedDocumentModel } from "../../../src/types";
-
-const mongoose = require('mongoose');
 
 const preApproveDocument = async (documentNumber: string, exportData: string, user: string) => {
 
@@ -18,10 +16,6 @@ const preApproveDocument = async (documentNumber: string, exportData: string, us
 
 describe('Pre approved documents', () => {
 
-  let mongoServer: MongoMemoryServer;
-
-  const opts = { connectTimeoutMS: 60000, socketTimeoutMS: 600000, serverSelectionTimeoutMS: 60000 }
-
   const testData = {
     documentNumber: "CC1",
     certificateData: { test: "test payload test" },
@@ -29,14 +23,11 @@ describe('Pre approved documents', () => {
   };
 
   beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-    await mongoose.connect(mongoUri, opts).catch(err => { console.log(err) });
+    await connectTestMongo();
   });
 
   afterAll(async () => {
-    await mongoose.disconnect();
-    await mongoServer.stop();
+    await disconnectTestMongo();
   });
 
   beforeEach(async () => {

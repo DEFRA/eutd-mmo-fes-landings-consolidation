@@ -1,23 +1,16 @@
-import mongoose from "mongoose";
-import { MongoMemoryServer } from "mongodb-memory-server";
+import { connectTestMongo, disconnectTestMongo } from '../../helpers/mongoTestConnection';
 import { CatchCertModel, CatchCertificate, CatchCertificateModel, IDocumentLandingQuery } from "../../../src/types";
 import { getCatchCertificate, getCatchCertificates } from "../../../src/landings/persistence/document";
 import { DocumentStatuses } from "mmo-shared-reference-data";
 
 describe('MongoMemoryServer - Fetching catch certificates', () => {
 
-  let mongoServer: MongoMemoryServer;
-  const opts = {}
-
   beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-    await mongoose.connect(mongoUri, opts).catch(err => { console.log(err) });
+    await connectTestMongo();
   });
 
   afterAll(async () => {
-    await mongoose.disconnect();
-    await mongoServer.stop();
+    await disconnectTestMongo();
   });
 
   beforeEach(async () => {
