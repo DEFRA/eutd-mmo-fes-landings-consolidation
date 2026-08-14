@@ -94,7 +94,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
       })
 
       const results = await SUT.getLandings('2019-01-01','2020-01-01');
-      expect(results.length).toBe(1)
+      expect(results.length).toHaveLength(1)
     });
 
   });
@@ -133,7 +133,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
   
       expect(mockLoggerInfo).toHaveBeenCalledWith('[LANDINGS-CONSOLIDATION][GET-MULTIPLE-LANDINGS][LANDING][RSS-NUMBER][100]');
   
-      expect(res.length).toBe(2)
+      expect(res.length).toHaveLength(2)
     })
   
     it('will match correctly on both attributes', async() => {
@@ -163,7 +163,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
   
       const res = await SUT.getLandingsMultiple( [{ rssNumber: '100', dateLanded: '2019-08-01' }] )
   
-      expect(res.length).toBe(1)
+      expect(res.length).toHaveLength(1)
   
     })
   
@@ -197,7 +197,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         { rssNumber: '200', dateLanded: '2019-08-01' },
       ] )
   
-      expect(res.length).toBe(2)
+      expect(res.length).toHaveLength(2)
   
     })
   
@@ -231,7 +231,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
         { rssNumber: '100', dateLanded: '2019-08-01' },
       ] )
   
-      expect(res.length).toBe(1)
+      expect(res.length).toHaveLength(1)
   
     })
   
@@ -262,7 +262,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
   
       const res = await SUT.getLandingsMultiple( [] )
   
-      expect(res.length).toBe(0)
+      expect(res.length).toHaveLength(0)
   
     });
   
