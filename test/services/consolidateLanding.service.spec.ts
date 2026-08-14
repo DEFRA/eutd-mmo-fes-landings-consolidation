@@ -1,15 +1,14 @@
-import mongoose from 'mongoose';
 import * as Landings from '../../src/landings/persistence/landing';
 import * as Transformations from '../../src/landings/transformations/landing';
 import * as ConsolidateLandings from '../../src/landings/persistence/consolidateLanding';
 import * as Cache from '../../src/data/cache';
 import * as Risking from '../../src/data/risking';
 import { runLandingsConsolidationJob, consolidateLandings, updateConsolidateLandings, voidConsolidateLandings, getLandingsRefresh, findAllCatchCertificates } from '../../src/services/consolidateLanding.service';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import { CatchCertificateModel, ConsolidateLandingModel, IConsolidateLanding, LandingModel, PreApprovedDocumentModel } from '../../src/types';
 import { ILanding, LandingSources, generateIndex } from 'mmo-shared-reference-data';
 import logger from '../../src/logger';
 import moment from 'moment';
+import { connectTestMongo, disconnectTestMongo } from '../helpers/mongoTestConnection';
 
 const buildLandingsConsolidateLandingsCollection = async () => {
   let consolidatedLanded = new ConsolidateLandingModel({
@@ -302,8 +301,6 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
   let mockGetSpeciesAliases: jest.SpyInstance;
   let mockRefreshRiskingData: jest.SpyInstance;
   let mockGetIsHighRisk: jest.SpyInstance;
-  let mongoServer: MongoMemoryServer;
-  const opts = { connectTimeoutMS: 60000, socketTimeoutMS: 600000, serverSelectionTimeoutMS: 60000 };
   const vesselData = [{
     registrationNumber: "WA1",
     fishingLicenceValidTo: "2024-12-20T00:00:00",
@@ -329,14 +326,11 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
   const vesselsIdx = generateIndex(vesselData);
 
   beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-    await mongoose.connect(mongoUri, opts).catch((err: Error) => { console.log(err) });
+    await connectTestMongo();
   });
 
   afterAll(async () => {
-    await mongoose.disconnect();
-    await mongoServer.stop();
+    await disconnectTestMongo();
   });
 
   beforeEach(async () => {

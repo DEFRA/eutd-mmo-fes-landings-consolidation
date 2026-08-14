@@ -94,7 +94,6 @@ export const updateConsolidateLanding = async (landing: IConsolidateLanding): Pr
       },
       landing,
       {
-        new: true,
         upsert: true
       }
     )

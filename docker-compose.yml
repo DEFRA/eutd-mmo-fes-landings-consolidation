@@ -1,0 +1,23 @@
+# App only. Run docker-compose.deps.yml first.
+
+services:
+  landings-consolidation:
+    build:
+      context: .
+      target: development
+      args:
+        NPM_TOKEN: ${NPM_TOKEN:-}
+    ports:
+      - "9001:9001"
+    environment:
+      DB_CONNECTION_URI: mongodb://mongo:27017
+    env_file:
+      - path: .env
+        required: false
+    networks:
+      - lc-shared
+
+networks:
+  lc-shared:
+    external: true
+    name: lc-shared-net
