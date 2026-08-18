@@ -1,15 +1,14 @@
-import mongoose from 'mongoose';
 import * as Landings from '../../src/landings/persistence/landing';
 import * as Transformations from '../../src/landings/transformations/landing';
 import * as ConsolidateLandings from '../../src/landings/persistence/consolidateLanding';
 import * as Cache from '../../src/data/cache';
 import * as Risking from '../../src/data/risking';
 import { runLandingsConsolidationJob, consolidateLandings, updateConsolidateLandings, voidConsolidateLandings, getLandingsRefresh, findAllCatchCertificates } from '../../src/services/consolidateLanding.service';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import { CatchCertificateModel, ConsolidateLandingModel, IConsolidateLanding, LandingModel, PreApprovedDocumentModel } from '../../src/types';
 import { ILanding, LandingSources, generateIndex } from 'mmo-shared-reference-data';
 import logger from '../../src/logger';
 import moment from 'moment';
+import { connectTestMongo, disconnectTestMongo } from '../helpers/mongoTestConnection';
 
 const buildLandingsConsolidateLandingsCollection = async () => {
   let consolidatedLanded = new ConsolidateLandingModel({
@@ -302,8 +301,6 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
   let mockGetSpeciesAliases: jest.SpyInstance;
   let mockRefreshRiskingData: jest.SpyInstance;
   let mockGetIsHighRisk: jest.SpyInstance;
-  let mongoServer: MongoMemoryServer;
-  const opts = { connectTimeoutMS: 60000, socketTimeoutMS: 600000, serverSelectionTimeoutMS: 60000 };
   const vesselData = [{
     registrationNumber: "WA1",
     fishingLicenceValidTo: "2024-12-20T00:00:00",
@@ -329,14 +326,11 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
   const vesselsIdx = generateIndex(vesselData);
 
   beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-    await mongoose.connect(mongoUri, opts).catch((err: Error) => { console.log(err) });
+    await connectTestMongo();
   });
 
   afterAll(async () => {
-    await mongoose.disconnect();
-    await mongoServer.stop();
+    await disconnectTestMongo();
   });
 
   beforeEach(async () => {
@@ -1827,179 +1821,60 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
     expect(results).toHaveLength(0);
   });
 
-  it('will not update the landings consolidate landings collection with entry for elog species above the deminimus', async () => {
-    const catchCert = new CatchCertificateModel({
-      status: "COMPLETE",
-      __t: "catchCert",
-      documentNumber: "CC1",
-      createdAt: "2019-07-10T08:26:06.939Z",
-      createdBy: "Bob",
-      createdByEmail: "foo@foo.com",
-      exportData: {
-        products: [
-          {
-            speciesId: "CC1-1-COD",
-            speciesCode: "COD",
-            state: {
-              code: "FRE",
-              name: "Fresh"
-            },
-            presentation: {
-              code: "FIS",
-              name: "Filleted and skinned"
-            },
-            factor: 1,
-            caughtBy: [
-              {
-                id: "CC1-1",
-                vessel: "DAYBREAK",
-                pln: "WA1",
-                date: "2023-10-09",
-                weight: 51,
-                dataEverExpected: true,
-                landingDataExpectedDate: "2023-10-11",
-                landingDataEndDate: moment.utc().format('YYYY-MM-DD')
-              }
-            ]
-          }
-        ]
-      }
-    });
+  it.each([
+    { scenario: 'above the deminimus',                          certWeight: 51, landingSpecies: 'HER', landedWeight: 45 },
+    { scenario: 'within the deminimus on catch certificate',    certWeight: 45, landingSpecies: 'COD', landedWeight: 45 },
+    { scenario: 'failure above the deminimus',                  certWeight: 51, landingSpecies: 'HER', landedWeight: 100 },
+  ])(
+    'will not update the landings consolidate landings collection with entry for elog species $scenario',
+    async ({ certWeight, landingSpecies, landedWeight }) => {
+      const catchCert = new CatchCertificateModel({
+        status: "COMPLETE",
+        __t: "catchCert",
+        documentNumber: "CC1",
+        createdAt: "2019-07-10T08:26:06.939Z",
+        createdBy: "Bob",
+        createdByEmail: "foo@foo.com",
+        exportData: {
+          products: [
+            {
+              speciesId: "CC1-1-COD",
+              speciesCode: "COD",
+              state: { code: "FRE", name: "Fresh" },
+              presentation: { code: "FIS", name: "Filleted and skinned" },
+              factor: 1,
+              caughtBy: [
+                {
+                  id: "CC1-1",
+                  vessel: "DAYBREAK",
+                  pln: "WA1",
+                  date: "2023-10-09",
+                  weight: certWeight,
+                  dataEverExpected: true,
+                  landingDataExpectedDate: "2023-10-11",
+                  landingDataEndDate: moment.utc().format('YYYY-MM-DD')
+                }
+              ]
+            }
+          ]
+        }
+      });
 
-    await catchCert.save();
+      await catchCert.save();
 
-    const transformedLandings: IConsolidateLanding[] = [{
-      dateLanded: "2023-10-09",
-      rssNumber: "rssWA1",
-      source: LandingSources.ELog,
-      items: [{
-        species: "HER",
-        landedWeight: 45,
-        isEstimate: true
-      }]
-    }];
+      const transformedLandings: IConsolidateLanding[] = [{
+        dateLanded: "2023-10-09",
+        rssNumber: "rssWA1",
+        source: LandingSources.ELog,
+        items: [{ species: landingSpecies, landedWeight, isEstimate: true }]
+      }];
 
-    await consolidateLandings(transformedLandings);
+      await consolidateLandings(transformedLandings);
 
-    const results = await ConsolidateLandingModel.find({});
-    expect(results).toHaveLength(0);
-  });
-
-  it('will not update the landings consolidate landings collection with entry for elog species within the deminimus on catch certificate', async () => {
-    const catchCert = new CatchCertificateModel({
-      status: "COMPLETE",
-      __t: "catchCert",
-      documentNumber: "CC1",
-      createdAt: "2019-07-10T08:26:06.939Z",
-      createdBy: "Bob",
-      createdByEmail: "foo@foo.com",
-      exportData: {
-        products: [
-          {
-            speciesId: "CC1-1-COD",
-            speciesCode: "COD",
-            state: {
-              code: "FRE",
-              name: "Fresh"
-            },
-            presentation: {
-              code: "FIS",
-              name: "Filleted and skinned"
-            },
-            factor: 1,
-            caughtBy: [
-              {
-                id: "CC1-1",
-                vessel: "DAYBREAK",
-                pln: "WA1",
-                date: "2023-10-09",
-                weight: 45,
-                dataEverExpected: true,
-                landingDataExpectedDate: "2023-10-11",
-                landingDataEndDate: moment.utc().format('YYYY-MM-DD')
-              }
-            ]
-          }
-        ]
-      }
-    });
-
-    await catchCert.save();
-
-    const transformedLandings: IConsolidateLanding[] = [{
-      dateLanded: "2023-10-09",
-      rssNumber: "rssWA1",
-      source: LandingSources.ELog,
-      items: [{
-        species: "COD",
-        landedWeight: 45,
-        isEstimate: true
-      }]
-    }];
-
-    await consolidateLandings(transformedLandings);
-
-    const results = await ConsolidateLandingModel.find({});
-    expect(results).toHaveLength(0);
-  });
-
-  it('will not update the landings consolidate landings collection with entry for elog species failure above the deminimus', async () => {
-    const catchCert = new CatchCertificateModel({
-      status: "COMPLETE",
-      __t: "catchCert",
-      documentNumber: "CC1",
-      createdAt: "2019-07-10T08:26:06.939Z",
-      createdBy: "Bob",
-      createdByEmail: "foo@foo.com",
-      exportData: {
-        products: [
-          {
-            speciesId: "CC1-1-COD",
-            speciesCode: "COD",
-            state: {
-              code: "FRE",
-              name: "Fresh"
-            },
-            presentation: {
-              code: "FIS",
-              name: "Filleted and skinned"
-            },
-            factor: 1,
-            caughtBy: [
-              {
-                id: "CC1-1",
-                vessel: "DAYBREAK",
-                pln: "WA1",
-                date: "2023-10-09",
-                weight: 51,
-                dataEverExpected: true,
-                landingDataExpectedDate: "2023-10-11",
-                landingDataEndDate: moment.utc().format('YYYY-MM-DD')
-              }
-            ]
-          }
-        ]
-      }
-    });
-
-    await catchCert.save();
-
-    const transformedLandings: IConsolidateLanding[] = [{
-      dateLanded: "2023-10-09",
-      rssNumber: "rssWA1",
-      source: LandingSources.ELog,
-      items: [{
-        species: "HER",
-        landedWeight: 100,
-        isEstimate: true
-      }]
-    }];
-
-    await consolidateLandings(transformedLandings);
-
-    const results = await ConsolidateLandingModel.find({});
-    expect(results).toHaveLength(0);
-  });
+      const results = await ConsolidateLandingModel.find({});
+      expect(results).toHaveLength(0);
+    }
+  );
 
   it('will not update the landings consolidate landings collection with entry for elog where species is found', async () => {
     const catchCert = new CatchCertificateModel({
