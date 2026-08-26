@@ -5,3 +5,4 @@ coverage/
 .vscode/mcp.json
 dist/
 .idea
+test-results

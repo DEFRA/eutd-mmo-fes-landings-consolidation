@@ -92,7 +92,7 @@ describe('When getting vessels from a blob storage', () => {
       expect(mockLoggerInfo.mock.calls[2][0]).toEqual('parsing notification file to json');
       expect(mockLoggerInfo.mock.calls[3][0]).toEqual('searching notification json');
       expect(mockLoggerInfo.mock.calls[4][0]).toEqual('Reading vessel data from');
-      expect(result.length).toEqual(3);
+    expect(result).toHaveLength(3);
   });
 
   it('should throw an error if vessels key is not defined in notification JSON', async () => {
@@ -104,7 +104,7 @@ describe('When getting vessels from a blob storage', () => {
       expect(mockLoggerInfo.mock.calls[1][0]).toEqual('reading notification file');
       expect(mockLoggerInfo.mock.calls[2][0]).toEqual('parsing notification file to json');
       expect(mockLoggerInfo.mock.calls[3][0]).toEqual('searching notification json');
-      expect(mockLoggerInfo.mock.calls[4]).toEqual(undefined);
+    expect(mockLoggerInfo.mock.calls[4]).toBeUndefined();
   });
 
   it('should throw an error if an error is thrown in the try block', async () => {

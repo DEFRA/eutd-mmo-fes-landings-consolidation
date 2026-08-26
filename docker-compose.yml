@@ -1,0 +1,23 @@
+# App only. Run `docker compose -f docker-compose.deps.yml up -d --wait` first — this joins the external fes-shared-net it creates.
+
+services:
+  landings-consolidation:
+    build:
+      context: .
+      target: development
+      args:
+        NPM_TOKEN: ${NPM_TOKEN:-}
+    ports:
+      - "9001:9001"
+    environment:
+      DB_CONNECTION_URI: mongodb://mongo:27017
+    env_file:
+      - path: .env
+        required: false
+    networks:
+      - fes-shared
+
+networks:
+  fes-shared:
+    external: true
+    name: fes-shared-net

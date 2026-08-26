@@ -1,6 +1,4 @@
-const mongoose = require('mongoose');
-
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { connectTestMongo, disconnectTestMongo } from '../../helpers/mongoTestConnection';
 import { LandingSources } from 'mmo-shared-reference-data';
 import { CatchCertificateModel, ConsolidateLandingModel, IConsolidateLanding } from '../../../src/types';
 import * as SUT from '../../../src/landings/persistence/consolidateLanding';
@@ -121,18 +119,13 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
   let mockUpdateMany: jest.SpyInstance;
   let mockDeleteMany: jest.SpyInstance;
   let mockVesselService: jest.SpyInstance;
-  let mongoServer: MongoMemoryServer;
-  const opts = { connectTimeoutMS: 60000, socketTimeoutMS: 600000, serverSelectionTimeoutMS: 60000 }
 
   beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-    await mongoose.connect(mongoUri, opts).catch((err: Error) => { console.log(err) });
+    await connectTestMongo();
   });
 
   afterAll(async () => {
-    await mongoose.disconnect();
-    await mongoServer.stop();
+    await disconnectTestMongo();
   });
 
   beforeEach(async () => {
