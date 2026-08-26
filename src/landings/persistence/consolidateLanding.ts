@@ -6,7 +6,7 @@ import {
   IConsolidateLandingItem,
   ILandingDetail
 } from "../../types";
-import { FilterQuery } from "mongoose";
+import { QueryFilter } from "mongoose";
 import { isWithinRetrospectivePeriod } from "../query/isWithinRetrospectivePeriod";
 import logger from "../../logger";
 
@@ -108,7 +108,7 @@ export const updateConsolidateLanding = async (landing: IConsolidateLanding): Pr
 };
 
 export const getRetrospectiveConsolidatedLandings = async (): Promise<ILandingDetail[]> => {
-  const query: FilterQuery<any> = {
+  const query: QueryFilter<any> = {
     $or: [{ 'items': { $exists: true } }, { 'items.landings': { $exists: true } }]
   }
 
