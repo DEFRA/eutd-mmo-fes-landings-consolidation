@@ -6,8 +6,8 @@ import logger from '../../logger';
 export const getLandings = async (startDate: string, endDate: string): Promise<ILanding[]> => {
   const query = {
     dateTimeLanded: {
-      $gte: moment.utc(startDate).startOf('day').toDate(),
-      $lte: moment.utc(endDate).endOf('day').toDate()
+      $gte: moment.utc(startDate).startOf('day').toISOString(),
+      $lte: moment.utc(endDate).endOf('day').toISOString()
     }
   };
 
@@ -31,8 +31,8 @@ export const getLandingsMultiple = async (landings: ILandingQuery[]): Promise<IL
     return {
       rssNumber: landing.rssNumber,
       dateTimeLanded: {
-        $gte: theDay.clone().startOf('day').toDate(),
-        $lte: theDay.clone().endOf('day').toDate()
+        $gte: theDay.clone().startOf('day').toISOString(),
+        $lte: theDay.clone().endOf('day').toISOString()
       }
     };
   });
