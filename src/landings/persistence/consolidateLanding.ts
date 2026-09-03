@@ -6,7 +6,7 @@ import {
   IConsolidateLandingItem,
   ILandingDetail
 } from "../../types";
-import { FilterQuery } from "mongoose";
+import { QueryFilter } from "mongoose";
 import { isWithinRetrospectivePeriod } from "../query/isWithinRetrospectivePeriod";
 import logger from "../../logger";
 
@@ -70,8 +70,8 @@ export const clearConsolidateLandings = async (start: string, end: string): Prom
   logger.info(`[LANDINGS-CONSOLIDATION][CLEARING-ALL-LANDINGS][START-DATE][${moment(start).utc().toISOString()}][END-DATE][${moment(end).utc().toISOString()}]`);
   await ConsolidateLandingModel.deleteMany({
     dateLanded: {
-      $gte: moment(start).utc().toDate(),
-      $lte: moment(end).utc().toDate()
+      $gte: moment(start).utc().toISOString(),
+      $lte: moment(end).utc().toISOString()
     }
   })
 };
@@ -108,7 +108,7 @@ export const updateConsolidateLanding = async (landing: IConsolidateLanding): Pr
 };
 
 export const getRetrospectiveConsolidatedLandings = async (): Promise<ILandingDetail[]> => {
-  const query: FilterQuery<any> = {
+  const query: QueryFilter<any> = {
     $or: [{ 'items': { $exists: true } }, { 'items.landings': { $exists: true } }]
   }
 
