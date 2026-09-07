@@ -29,6 +29,7 @@
         "check-coverage": true
     },
     "scripts": {
+        "prepare": "husky || true",
         "test": "cross-env JEST_JUNIT_OUTPUT_DIR=test-results JEST_JUNIT_OUTPUT_NAME=test-results.xml NODE_ENV=test jest test/ --coverage --ci",
         "test:ci": "cross-env JEST_JUNIT_OUTPUT_DIR=test-results JEST_JUNIT_OUTPUT_NAME=junit.xml NODE_ENV=test jest --runInBand --watchAll=false --reporters=default --reporters=jest-junit --coverage --ci",
         "test:watch": "cross-env JEST_JUNIT_OUTPUT_DIR=test-results JEST_JUNIT_OUTPUT_NAME=test-results.xml NODE_ENV=test jest --runInBand test/ --coverage --ci --watch",
@@ -67,8 +68,7 @@
         "@azure/storage-blob": "^12.31.0",
         "@hapi/basic": "^7.0.2",
         "@hapi/hapi": "^21.4.9",
-        "applicationinsights": "2.9.7",
-        "applicationinsights-native-metrics": "^0.0.11",
+        "applicationinsights": "2.9.8",
         "axios": "^1.17.0",
         "bunyan": "^1.8.15",
         "cross-env": "7.0.3",
@@ -78,8 +78,8 @@
         "lodash": "^4.18.1",
         "mingo": "^6.7.2",
         "mmo-shared-reference-data": "1.3.11",
-        "mongodb": "6.20.0",
-        "mongoose": "8.24.3",
+        "mongodb": "^7.5.0",
+        "mongoose": "^9.8.0",
         "node-cron": "^3.0.2",
         "uuid": "^9.0.1"
     },
@@ -135,7 +135,6 @@
     "author": "",
     "license": "ISC",
     "allowScripts": {
-        "applicationinsights-native-metrics@0.0.11": true,
         "dtrace-provider@0.8.8": true
     }
 }

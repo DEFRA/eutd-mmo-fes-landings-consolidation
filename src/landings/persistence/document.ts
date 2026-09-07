@@ -1,10 +1,10 @@
-import { FilterQuery } from "mongoose"
+import { QueryFilter } from "mongoose"
 import { DocumentStatuses } from "mmo-shared-reference-data"
 import { CatchCertificate, CatchCertificateModel, IDocumentLandingQuery } from "../../types"
 import logger from "../../logger"
 
 export const getCatchCertificates = async (landing: IDocumentLandingQuery): Promise<CatchCertificate[]> => {
-   const query: FilterQuery<any> = {
+   const query: QueryFilter<any> = {
     __t: 'catchCert',
     'status': DocumentStatuses.Complete,
     'exportData.products': { $exists: true },
