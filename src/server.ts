@@ -9,6 +9,7 @@ import { jobsRoutes } from './handler/jobs';
 import { staticRoutesWithoutAuth } from './handler/static-routes';
 import logger from './logger';
 import { loadExporterBehaviour, loadFishCountriesAndSpecies, loadVessels } from './data/cache';
+import { startMemoryMonitor, stopMemoryMonitor } from './services/memory-monitor.service';
 export class Server {
   private static instance: Hapi.Server;
 
@@ -38,6 +39,7 @@ export class Server {
       if (!inTest) {
         scheduleFishCountriesAndSpeciesJob();
         scheduleVesselsJob();
+        startMemoryMonitor();
       }
 
       Server.instance = new Hapi.Server({
@@ -64,6 +66,7 @@ export class Server {
   }
 
   public static async stop(): Promise<void> {
+    stopMemoryMonitor();
     await Server.instance.stop();
   }
 
