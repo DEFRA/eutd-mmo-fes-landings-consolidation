@@ -67,6 +67,8 @@ EXPOSE ${PORT}
 
 #The base node image sets a very verbose log level, we're just going to warn
 ENV NPM_CONFIG_LOGLEVEL=info
+# No cgroup memory limit is exposed, so Node cannot auto-size heap from container constraints.
+ENV NODE_OPTIONS=--max-old-space-size=1280
 
 # This is the command that is run for the production service. The parent image has an ENTRYPOINT that uses a lightweight
 #   init program "tini" that handles signals. As long as we don't override the ENTRYPOINT the "tini" routine will handle signals and
