@@ -97,7 +97,11 @@ export const jobsRoutes = (server: Server<ServerApplicationState>) => {
 					const { landings } = req.payload as IUpdateLandings;
 
 					logger.info(`[LANDING-CONSOLIDATION][UPDATING-LANDINGS][${landings.length}]`);
-					void startLandingsConsolidationJob(landings);
+					Promise.resolve()
+						.then(() => startLandingsConsolidationJob(landings))
+						.catch((e) => {
+							logger.error(`[LANDINGS-CONSOLIDATION][UPDATING-LANDINGS][ERROR][${e}]`);
+						});
 					logger.info(`[LANDING-CONSOLIDATION][UPDATING-LANDINGS][SUCCESS]`);
 					return h.response().code(202);
 				} catch (e) {
