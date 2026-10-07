@@ -15,6 +15,7 @@ export class ApplicationConfig {
   public blobStorageConnection: string;
   public scheduleFishCountriesAndSpeciesJob: string;
   public scheduleVesselsDataJob: string;
+  public catchCertificateFetchBatchSize: number;
 
   private static parseBoolean(input: string | undefined, fallback: boolean): boolean {
     if (input === undefined) {
@@ -49,6 +50,7 @@ export class ApplicationConfig {
     ApplicationConfig.prototype.blobStorageConnection = env.REFERENCE_DATA_AZURE_STORAGE;
     ApplicationConfig.prototype.scheduleVesselsDataJob = env.REFRESH_VESSEL_JOB;
     ApplicationConfig.prototype.scheduleFishCountriesAndSpeciesJob = env.REFRESH_SPECIES_JOB;
+    ApplicationConfig.prototype.catchCertificateFetchBatchSize = ApplicationConfig.parsePositiveInteger(env.CATCH_CERTIFICATE_FETCH_BATCH_SIZE, 5);
   }
 
 }

@@ -1,12 +1,15 @@
 import * as Landings from '../../src/landings/persistence/landing';
 import * as Transformations from '../../src/landings/transformations/landing';
 import * as ConsolidateLandings from '../../src/landings/persistence/consolidateLanding';
+import * as DocumentPersistence from '../../src/landings/persistence/document';
 import * as Cache from '../../src/data/cache';
 import * as Risking from '../../src/data/risking';
+import * as VesselService from '../../src/services/vessel.service';
 import { runLandingsConsolidationJob, consolidateLandings, updateConsolidateLandings, voidConsolidateLandings, getLandingsRefresh, findAllCatchCertificates } from '../../src/services/consolidateLanding.service';
 import { CatchCertificateModel, ConsolidateLandingModel, IConsolidateLanding, LandingModel, PreApprovedDocumentModel } from '../../src/types';
 import { ILanding, LandingSources, generateIndex } from 'mmo-shared-reference-data';
 import logger from '../../src/logger';
+import config from '../../src/config';
 import moment from 'moment';
 import { connectTestMongo, disconnectTestMongo } from '../helpers/mongoTestConnection';
 
@@ -6399,7 +6402,70 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
     expect(result).toHaveLength(1);
     expect(mockLoggerInfo).toHaveBeenNthCalledWith(1, '[LANDINGS-CONSOLIDATION][FINDING-USAGES-FOR][rssWA1-2023-10-09]');
     expect(mockLoggerInfo).toHaveBeenNthCalledWith(2, '[LANDINGS-CONSOLIDATION][FOUND-PLN][rssWA1-2023-10-09][PLN: WA1]');
-    expect(mockLoggerInfo).toHaveBeenNthCalledWith(4, '[LANDINGS-CONSOLIDATION][NUMBER-OF-CATCH-CERTIFICATE-REFERENCING][rssWA1-2023-10-09][1]');
+    expect(mockLoggerInfo).toHaveBeenCalledWith('[LANDINGS-CONSOLIDATION][NUMBER-OF-CATCH-CERTIFICATE-REFERENCING][rssWA1-2023-10-09][1]');
+    expect(mockLoggerInfo).toHaveBeenCalledWith('[LANDINGS-CONSOLIDATION][TOTAL-NUMBER-OF-CATCH-CERTIFICATES][1]');
+  });
+
+  it('will batch getCatchCertificates calls and keep deterministic flattened ordering', async () => {
+    const originalBatchSize = config.catchCertificateFetchBatchSize;
+    config.catchCertificateFetchBatchSize = 2;
+
+    const landings: ILanding[] = [
+      {
+        dateTimeLanded: "2023-10-09T00:30:00.000Z",
+        rssNumber: "rssWA1",
+        items: [{ species: "HER", weight: 1, factor: 1, state: "FRE", presentation: "WHL" }],
+        source: "ELOG"
+      },
+      {
+        dateTimeLanded: "2023-10-10T00:30:00.000Z",
+        rssNumber: "rssWA2",
+        items: [{ species: "HER", weight: 1, factor: 1, state: "FRE", presentation: "WHL" }],
+        source: "ELOG"
+      },
+      {
+        dateTimeLanded: "2023-10-11T00:30:00.000Z",
+        rssNumber: "rssWA3",
+        items: [{ species: "HER", weight: 1, factor: 1, state: "FRE", presentation: "WHL" }],
+        source: "ELOG"
+      }
+    ];
+
+    const getPlnSpy = jest.spyOn(VesselService, 'getPlnsForLanding');
+    getPlnSpy.mockImplementation(({ rssNumber, dateLanded }: any) => ({
+      rssNumber,
+      dateLanded,
+      pln: rssNumber.replace('rss', '')
+    }));
+
+    const getCatchCertificatesSpy = jest.spyOn(DocumentPersistence, 'getCatchCertificates');
+    const activeCalls = { current: 0, max: 0 };
+    getCatchCertificatesSpy.mockImplementation(async ({ pln, dateLanded }: any) => {
+      activeCalls.current += 1;
+      activeCalls.max = Math.max(activeCalls.max, activeCalls.current);
+
+      await new Promise((resolve) => setImmediate(resolve));
+
+      activeCalls.current -= 1;
+      return [{ documentNumber: `${pln}-${dateLanded}`, exportData: { products: [] } }] as any;
+    });
+
+    try {
+      const result = await findAllCatchCertificates(landings);
+
+      expect(getCatchCertificatesSpy).toHaveBeenCalledTimes(3);
+      expect(activeCalls.max).toBeLessThanOrEqual(2);
+      expect(result.map((doc: any) => doc.documentNumber)).toStrictEqual([
+        'WA1-2023-10-09',
+        'WA2-2023-10-10',
+        'WA3-2023-10-11'
+      ]);
+      expect(mockLoggerInfo).toHaveBeenCalledWith('[LANDINGS-CONSOLIDATION][TOTAL-NUMBER-OF-CATCH-CERTIFICATES][3]');
+    } finally {
+      config.catchCertificateFetchBatchSize = originalBatchSize;
+      getPlnSpy.mockRestore();
+      getCatchCertificatesSpy.mockRestore();
+    }
   });
 });
 

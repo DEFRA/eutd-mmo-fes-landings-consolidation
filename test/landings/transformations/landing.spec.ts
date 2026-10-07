@@ -5,6 +5,30 @@ import * as Cache from '../../../src/data/cache';
 import * as PreApprovedDocument from '../../../src/landings/persistence/preApprovedDocument';
 import * as Risking from '../../../src/data/risking';
 
+const toProjectedDocuments = (documents: CatchCertificate[]) =>
+  documents.map((document) => ({
+    documentNumber: document.documentNumber,
+    exportData: document.exportData ? {
+      products: (document.exportData.products || []).map((product) => ({
+        speciesCode: product.speciesCode,
+        factor: product.factor,
+        caughtBy: (product.caughtBy || []).map((ctch) => ({
+          id: ctch.id,
+          pln: ctch.pln,
+          date: ctch.date,
+          weight: ctch.weight,
+          dataEverExpected: ctch.dataEverExpected,
+          landingDataExpectedDate: ctch.landingDataExpectedDate,
+          landingDataEndDate: ctch.landingDataEndDate,
+        })),
+      })),
+      exporterDetails: document.exportData.exporterDetails ? {
+        accountId: document.exportData.exporterDetails.accountId,
+        contactId: document.exportData.exporterDetails.contactId,
+      } : undefined,
+    } : undefined,
+  }));
+
 describe('when transforming landings', () => {
 
   it('should return a consoldated landing for LANDING_DECLARATION', () => {
@@ -205,6 +229,58 @@ describe('when building a dictionary of landings indexable by species', () => {
 
     const result = await buildLandingsSpeciesIdx(documents, landing);
     expect(result).toStrictEqual(speciesIdx);
+  })
+
+  it('should build identical species index for projected and full documents', async () => {
+    const landing: ILandingDetail = { pln: 'WA1', dateLanded: '2023-10-09', rssNumber: 'rssWA1' };
+    const documents: CatchCertificate[] = [{
+      status: "COMPLETE",
+      documentNumber: "CC1",
+      createdAt: new Date("2019-07-10T08:26:06.939Z"),
+      createdBy: "Bob",
+      createdByEmail: "foo@foo.com",
+      exportData: {
+        products: [
+          {
+            speciesId: "CC1-1-COD",
+            speciesCode: "COD",
+            state: { code: "FRE", name: "Fresh" },
+            presentation: { code: "WHL", name: "Whole" },
+            factor: 2,
+            caughtBy: [
+              {
+                id: "CC1-1",
+                vessel: "DAYBREAK",
+                pln: "WA1",
+                date: "2023-10-09",
+                weight: 100,
+                dataEverExpected: true,
+                landingDataExpectedDate: "2023-10-11",
+                landingDataEndDate: "2023-10-13"
+              }
+            ]
+          }
+        ],
+        exporterDetails: {
+          addressOne: '1 Street',
+          postcode: 'AB12 3CD',
+          exporterCompanyName: 'Company',
+          exporterFullName: 'Name',
+          _dynamicsAddress: {},
+          _dynamicsUser: {},
+          accountId: 'acc-1',
+          contactId: 'cont-1'
+        }
+      }
+    }];
+
+    const preApprovedMap = new Map([['CC1', true]]);
+    const projectedDocuments = toProjectedDocuments(documents);
+
+    const fullResult = await buildLandingsSpeciesIdx(documents, landing, preApprovedMap);
+    const projectedResult = await buildLandingsSpeciesIdx(projectedDocuments as any, landing, preApprovedMap);
+
+    expect(projectedResult).toStrictEqual(fullResult);
   })
 
   it('should use the provided preApprovedMap and skip auto-fetch', async () => {
@@ -1351,14 +1427,26 @@ describe('when uniquifying the landings', () => {
 describe('buildDocumentLandingsList without preApprovedMap', () => {
 
   let mockGetPreApprovedDocumentsMap: jest.SpyInstance;
+  let mockGetVesselsIdx: jest.SpyInstance;
 
   beforeEach(() => {
     mockGetPreApprovedDocumentsMap = jest.spyOn(PreApprovedDocument, 'getPreApprovedDocumentsMap');
     mockGetPreApprovedDocumentsMap.mockResolvedValue(new Map());
+
+    mockGetVesselsIdx = jest.spyOn(Cache, 'getVesselsIdx');
+    mockGetVesselsIdx.mockReturnValue(generateIndex([
+      {
+        registrationNumber: 'WA1',
+        fishingLicenceValidTo: '2100-12-20T00:00:00',
+        fishingLicenceValidFrom: '2000-12-29T00:00:00',
+        rssNumber: 'rssWA1'
+      }
+    ]));
   });
 
   afterEach(() => {
     mockGetPreApprovedDocumentsMap.mockRestore();
+    mockGetVesselsIdx.mockRestore();
   });
 
   it('should auto-fetch the approval map when preApprovedMap is not provided', async () => {
@@ -1377,5 +1465,58 @@ describe('buildDocumentLandingsList without preApprovedMap', () => {
 
     expect(mockGetPreApprovedDocumentsMap).toHaveBeenCalledWith(['CC1']);
     expect(result).toEqual([]);
+  });
+
+  it('should build identical document landing lists for projected and full documents', async () => {
+    const documents: CatchCertificate[] = [{
+      status: "COMPLETE",
+      documentNumber: "CC1",
+      createdAt: new Date("2019-07-10T08:26:06.939Z"),
+      createdBy: "Bob",
+      createdByEmail: "foo@foo.com",
+      exportData: {
+        products: [{
+          speciesId: "CC1-1-COD",
+          speciesCode: "COD",
+          factor: 2,
+          state: { code: "FRE", name: "Fresh" },
+          presentation: { code: "WHL", name: "Whole" },
+          caughtBy: [{
+            id: "CC1-1",
+            vessel: "DAYBREAK",
+            pln: "WA1",
+            date: "2023-10-09",
+            weight: 100,
+            dataEverExpected: true,
+            landingDataExpectedDate: "2023-10-11",
+            landingDataEndDate: "2023-10-13"
+          }]
+        }],
+        exporterDetails: {
+          addressOne: '1 Street',
+          postcode: 'AB12 3CD',
+          exporterCompanyName: 'Company',
+          exporterFullName: 'Name',
+          _dynamicsAddress: {},
+          _dynamicsUser: {},
+          accountId: 'acc-1',
+          contactId: 'cont-1'
+        }
+      }
+    }];
+
+    const projectedDocuments = toProjectedDocuments(documents);
+    const preApprovedMap = new Map([['CC1', true]]);
+    const landingsIdx = {
+      'rssWA12023-10-09': {
+        rssNumber: 'rssWA1',
+        dateLanded: '2023-10-09'
+      }
+    };
+
+    const fullResult = await buildDocumentLandingsList(documents, landingsIdx, preApprovedMap);
+    const projectedResult = await buildDocumentLandingsList(projectedDocuments as any, landingsIdx, preApprovedMap);
+
+    expect(projectedResult).toStrictEqual(fullResult);
   });
 });
