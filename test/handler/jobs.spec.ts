@@ -209,8 +209,10 @@ describe('routes', () => {
     expect(response.statusCode).toBe(400);
   });
 
-  it('will return a status of 500 if something goes wrong when updating landings', async () => {
-    mockLandingsConsolidateJob.mockImplementation(() => { throw new Error('something has gone wrong') });
+  it('will log an error and return 202 if something goes wrong when updating landings', async () => {
+    const unhandledRejectionListener = jest.fn();
+    process.on('unhandledRejection', unhandledRejectionListener);
+    mockLandingsConsolidateJob.mockRejectedValue(new Error('something has gone wrong'));
 
     const req = {
       method: 'POST',
@@ -222,7 +224,30 @@ describe('routes', () => {
 
     const response = await server.inject(req);
 
-    expect(mockLoggerError).toHaveBeenCalled();
+    await new Promise(process.nextTick);
+
+    expect(mockLoggerError).toHaveBeenCalledWith('[LANDINGS-CONSOLIDATION][UPDATING-LANDINGS][ERROR][Error: something has gone wrong]');
+    expect(response.statusCode).toBe(202);
+    expect(unhandledRejectionListener).not.toHaveBeenCalled();
+    process.off('unhandledRejection', unhandledRejectionListener);
+  });
+
+  it('will log an error and return 500 if a synchronous error happens in the landings handler try block', async () => {
+    mockLoggerInfo.mockImplementationOnce(() => {
+      throw new Error('sync logging failure');
+    });
+
+    const req = {
+      method: 'POST',
+      url: '/v1/jobs/landings',
+      payload: {
+        landings: []
+      }
+    }
+
+    const response = await server.inject(req);
+
+    expect(mockLoggerError).toHaveBeenCalledWith('[LANDINGS-CONSOLIDATION][ERROR][Error: sync logging failure]');
     expect(response.statusCode).toBe(500);
   });
 

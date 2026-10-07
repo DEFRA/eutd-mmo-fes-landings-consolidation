@@ -139,23 +139,22 @@ describe('MongoMemoryServer - Fetching catch certificates', () => {
       const expected: CatchCertificate[] = [
         {
           documentNumber: 'CC1',
-          status: 'COMPLETE',
-          createdAt: new Date('2019-07-10T08:26:06.939Z'),
-          createdBy: 'Bob',
-          createdByEmail: 'foo@foo.com',
-          audit: [],
-          exportData: { 
+          exportData: {
             products: [
               {
-                speciesId:  "CC1-1-LBE",
                 speciesCode: "LBE",
                 caughtBy: [
-                  { id: "CC1-1", vessel: "DAYBREAK", pln: "WA1", date: "2019-07-10", weight: 100, numberOfSubmissions: 0 }
+                  {
+                    id: "CC1-1",
+                    pln: "WA1",
+                    date: "2019-07-10",
+                    weight: 100
+                  }
                 ]
               }
             ]
           }
-        }
+        } as CatchCertificate
       ];
   
       const landings: IDocumentLandingQuery = { pln: 'WA1', dateLanded: '2019-07-10' };
