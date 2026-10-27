@@ -1997,6 +1997,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
 
   it('will not update the landings consolidate landings collection with no PLN', async () => {
     mockGetVesselData.mockReturnValue([]);
+    mockVesselIdx.mockReturnValue(generateIndex([]));
 
     const transformedLandings: IConsolidateLanding[] = [{
       dateLanded: "2023-10-09",
@@ -2013,6 +2014,25 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
 
     const results = await ConsolidateLandingModel.find({});
     expect(results).toHaveLength(0);
+    expect(mockLoggerInfo).toHaveBeenCalledWith('[LANDINGS-CONSOLIDATION][NOT-FOUND-PLN][rssWA1-2023-10-09]');
+  });
+
+  it('does not add unmatched document species to an ELog landing', async () => {
+    await buildDocumentUsageCertificatesCollection();
+
+    const transformedLandings: IConsolidateLanding[] = [{
+      dateLanded: '2023-10-09',
+      rssNumber: 'rssWA1',
+      source: LandingSources.ELog,
+      items: [{ species: 'MON', landedWeight: 10, isEstimate: false }]
+    }];
+
+    await consolidateLandings(transformedLandings);
+
+    const result = await ConsolidateLandingModel.findOne({ rssNumber: 'rssWA1', dateLanded: '2023-10-09' });
+    expect(result).toBeNull();
+    expect(mockLoggerInfo).toHaveBeenCalledWith('[LANDINGS-CONSOLIDATION][FOUND-PLN][rssWA1-2023-10-09][PLN: WA1]');
+    expect(mockLoggerInfo).toHaveBeenCalledWith('[LANDINGS-CONSOLIDATION][NUMBER-OF-SPECIES-FOUND-ON-CATCH-CERTIFICATES][2023-10-09-WA1][1]');
   });
 
   it('will catch any errors thrown whilst updating', async () => {
@@ -3329,7 +3349,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
     expect(updatedConsolidatedLanding).toBeNull();
   });
 
-  it('will not consolidate if the species can not be found on the landing', async () => {
+  it('will not consolidate if neither the species nor its aliases are on the landing', async () => {
     const catchCert = new CatchCertificateModel({
       status: "COMPLETE",
       __t: "catchCert",
@@ -3340,8 +3360,8 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
       exportData: {
         products: [
           {
-            speciesId: "CC1-1-HER",
-            speciesCode: "HER",
+            speciesId: "CC1-1-MON",
+            speciesCode: "MON",
             state: {
               code: "FRE",
               name: "Fresh"
@@ -3383,7 +3403,7 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
 
     const updatedConsolidatedLanding: IConsolidateLanding = await ConsolidateLandings.getConsolidationLanding({ rssNumber: "rssWA1", dateLanded: "2020-01-01" })
 
-    expect(mockLoggerInfo).toHaveBeenCalledWith('[LANDING-CONSOLIDATION][EXPORT-LANDING][CC1-1][SPECIES-MIS-MATCH][HER]')
+    expect(mockLoggerInfo).toHaveBeenCalledWith('[LANDING-CONSOLIDATION][EXPORT-LANDING][CC1-1][SPECIES-MIS-MATCH][MON]')
     expect(updatedConsolidatedLanding).toBeNull();
   });
 

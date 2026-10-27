@@ -282,6 +282,18 @@ describe('getVessesData', () => {
   });
 });
 
+describe('cache updates with missing data', () => {
+  it('ignores absent cache values', () => {
+    expect(() => {
+      SUT.updateVesselsCache(undefined);
+      SUT.updateVesselsOfInterestCache(undefined as any);
+      SUT.updateWeightingCache(undefined as any);
+      SUT.updateConversionFactorCache(undefined as any);
+      SUT.updateSpeciesAliasesCache(undefined);
+    }).not.toThrow();
+  });
+});
+
 describe('getSpeciesAliases', () => {
 
   const mockSpeciesAliases: any = {
