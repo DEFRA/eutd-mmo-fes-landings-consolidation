@@ -190,15 +190,11 @@ export const stopMemoryMonitor = (): void => {
   clearInterval(monitorHandle);
   monitorHandle = undefined;
 
-  if (eventLoopDelayHistogram) {
-    eventLoopDelayHistogram.disable();
-    eventLoopDelayHistogram = undefined;
-  }
+  eventLoopDelayHistogram!.disable();
+  eventLoopDelayHistogram = undefined;
 
-  if (gcObserver) {
-    gcObserver.disconnect();
-    gcObserver = undefined;
-  }
+  gcObserver!.disconnect();
+  gcObserver = undefined;
 
   resetGcCounters();
   logger.info('[LANDINGS-CONSOLIDATION][MEMORY][MONITOR][STOPPED]');
