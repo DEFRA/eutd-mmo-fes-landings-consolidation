@@ -5,6 +5,19 @@ import * as Cache from '../../../src/data/cache';
 import * as PreApprovedDocument from '../../../src/landings/persistence/preApprovedDocument';
 import * as Risking from '../../../src/data/risking';
 
+const toProjectedDocuments = (documents: CatchCertificate[]): CatchCertificate[] =>
+  documents.map(document => ({
+    ...document,
+    exportData: {
+      products: document.exportData.products.map(({ speciesId, speciesCode, factor, caughtBy }) => ({
+        speciesId,
+        speciesCode,
+        factor,
+        caughtBy
+      }))
+    }
+  }));
+
 describe('when transforming landings', () => {
 
   it('should return a consoldated landing for LANDING_DECLARATION', () => {
@@ -1351,14 +1364,22 @@ describe('when uniquifying the landings', () => {
 describe('buildDocumentLandingsList without preApprovedMap', () => {
 
   let mockGetPreApprovedDocumentsMap: jest.SpyInstance;
+  let mockGetVesselsIdx: jest.SpyInstance;
 
   beforeEach(() => {
     mockGetPreApprovedDocumentsMap = jest.spyOn(PreApprovedDocument, 'getPreApprovedDocumentsMap');
     mockGetPreApprovedDocumentsMap.mockResolvedValue(new Map());
+    mockGetVesselsIdx = jest.spyOn(Cache, 'getVesselsIdx').mockReturnValue(generateIndex([{
+      registrationNumber: 'WA1',
+      fishingLicenceValidFrom: '2000-12-29T00:00:00',
+      fishingLicenceValidTo: '2100-12-20T00:00:00',
+      rssNumber: 'rssWA1'
+    }]));
   });
 
   afterEach(() => {
     mockGetPreApprovedDocumentsMap.mockRestore();
+    mockGetVesselsIdx.mockRestore();
   });
 
   it('should auto-fetch the approval map when preApprovedMap is not provided', async () => {
@@ -1439,7 +1460,7 @@ describe('buildDocumentLandingsList without preApprovedMap', () => {
     };
 
     const fullResult = await buildDocumentLandingsList(documents, landingsIdx, preApprovedMap);
-    const projectedResult = await buildDocumentLandingsList(projectedDocuments as any, landingsIdx, preApprovedMap);
+    const projectedResult = await buildDocumentLandingsList(projectedDocuments, landingsIdx, preApprovedMap);
 
     expect(projectedResult).toStrictEqual(fullResult);
   });
