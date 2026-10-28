@@ -282,6 +282,18 @@ describe('getVessesData', () => {
   });
 });
 
+describe('cache updates with missing data', () => {
+  it('ignores absent cache values', () => {
+    expect(() => {
+      SUT.updateVesselsCache(undefined);
+      SUT.updateVesselsOfInterestCache(undefined as any);
+      SUT.updateWeightingCache(undefined as any);
+      SUT.updateConversionFactorCache(undefined as any);
+      SUT.updateSpeciesAliasesCache(undefined);
+    }).not.toThrow();
+  });
+});
+
 describe('getSpeciesAliases', () => {
 
   const mockSpeciesAliases: any = {
@@ -635,29 +647,14 @@ describe('getSpeciesRiskScore', () => {
     SUT.updateConversionFactorCache(mockConversionFactors);
   });
 
-  it('should return default value when undefined riskScore', () => {
-    const speciesRisk = SUT.getSpeciesRiskScore('COD');
-    expect(speciesRisk).toBe(1);
-  });
-
-  it('should return default value when missing riskScore', () => {
-    const speciesRisk = SUT.getSpeciesRiskScore('WHO');
-    expect(speciesRisk).toBe(1);
-  });
-
-  it('should return riskScore value when riskScore is a number', () => {
-    const speciesRisk = SUT.getSpeciesRiskScore('LBE');
-    expect(speciesRisk).toBe(1);
-  });
-
-  it('should return riskScore value when riskScore is a string valid number', () => {
-    const speciesRisk = SUT.getSpeciesRiskScore('HER');
-    expect(speciesRisk).toBe(1);
-  });
-
-  it('should return default value when riskScore string is a string not valid number', () => {
-    const speciesRisk = SUT.getSpeciesRiskScore('ALB');
-    expect(speciesRisk).toBe(1);
+  it.each([
+    { species: 'COD', scenario: 'undefined riskScore' },
+    { species: 'WHO', scenario: 'missing riskScore' },
+    { species: 'LBE', scenario: 'numeric riskScore' },
+    { species: 'HER', scenario: 'numeric string riskScore' },
+    { species: 'ALB', scenario: 'non-numeric riskScore string' },
+  ])('should return a score of 1 for $scenario', ({ species }) => {
+    expect(SUT.getSpeciesRiskScore(species)).toBe(1);
   });
 
   it('should return default value when species data does not exist', () => {
