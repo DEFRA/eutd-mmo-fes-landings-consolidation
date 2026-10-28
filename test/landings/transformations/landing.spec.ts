@@ -1378,4 +1378,69 @@ describe('buildDocumentLandingsList without preApprovedMap', () => {
     expect(mockGetPreApprovedDocumentsMap).toHaveBeenCalledWith(['CC1']);
     expect(result).toEqual([]);
   });
+
+  it('skips documents without export data and products without caught landings', async () => {
+    const landing: ILandingDetail = { pln: 'WA1', dateLanded: '2023-10-09', rssNumber: 'rssWA1' };
+    const documents = [
+      { documentNumber: 'CC1' },
+      { documentNumber: 'CC2', exportData: { products: [{ speciesCode: 'COD', factor: 1 }] } }
+    ] as any;
+    const approvalMap = new Map<string, boolean>();
+
+    await expect(buildLandingsSpeciesIdx(documents, landing, approvalMap)).resolves.toEqual({});
+    await expect(buildDocumentLandingsList(documents, {}, approvalMap)).resolves.toEqual([]);
+  });
+
+  it('should build identical document landing lists for projected and full documents', async () => {
+    const documents: CatchCertificate[] = [{
+      status: "COMPLETE",
+      documentNumber: "CC1",
+      createdAt: new Date("2019-07-10T08:26:06.939Z"),
+      createdBy: "Bob",
+      createdByEmail: "foo@foo.com",
+      exportData: {
+        products: [{
+          speciesId: "CC1-1-COD",
+          speciesCode: "COD",
+          factor: 2,
+          state: { code: "FRE", name: "Fresh" },
+          presentation: { code: "WHL", name: "Whole" },
+          caughtBy: [{
+            id: "CC1-1",
+            vessel: "DAYBREAK",
+            pln: "WA1",
+            date: "2023-10-09",
+            weight: 100,
+            dataEverExpected: true,
+            landingDataExpectedDate: "2023-10-11",
+            landingDataEndDate: "2023-10-13"
+          }]
+        }],
+        exporterDetails: {
+          addressOne: '1 Street',
+          postcode: 'AB12 3CD',
+          exporterCompanyName: 'Company',
+          exporterFullName: 'Name',
+          _dynamicsAddress: {},
+          _dynamicsUser: {},
+          accountId: 'acc-1',
+          contactId: 'cont-1'
+        }
+      }
+    }];
+
+    const projectedDocuments = toProjectedDocuments(documents);
+    const preApprovedMap = new Map([['CC1', true]]);
+    const landingsIdx = {
+      'rssWA12023-10-09': {
+        rssNumber: 'rssWA1',
+        dateLanded: '2023-10-09'
+      }
+    };
+
+    const fullResult = await buildDocumentLandingsList(documents, landingsIdx, preApprovedMap);
+    const projectedResult = await buildDocumentLandingsList(projectedDocuments as any, landingsIdx, preApprovedMap);
+
+    expect(projectedResult).toStrictEqual(fullResult);
+  });
 });

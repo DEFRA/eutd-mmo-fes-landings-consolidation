@@ -234,6 +234,26 @@ describe('MongoMemoryServer - Wrapper to run inMemory Database', () => {
       expect(res).toHaveLength(1)
   
     })
+
+    it('deduplicates duplicate landing results', async () => {
+      const landing: ILanding = {
+        rssNumber: '100',
+        dateTimeLanded: moment.utc('2019-08-01T10:00:00Z').toISOString(),
+        source: LandingSources.LandingDeclaration,
+        items: [{ species: 'COD', weight: 4, factor: 1 }]
+      };
+      const findSpy = jest.spyOn(LandingModel, 'find').mockReturnValue({
+        lean: jest.fn().mockResolvedValue([landing, landing])
+      } as any);
+
+      try {
+        const results = await SUT.getLandingsMultiple([{ rssNumber: '100', dateLanded: '2019-08-01' }]);
+
+        expect(results).toHaveLength(1);
+      } finally {
+        findSpy.mockRestore();
+      }
+    });
   
     it('can handle empty input', async() => {
   

@@ -282,6 +282,18 @@ describe('getVessesData', () => {
   });
 });
 
+describe('cache updates with missing data', () => {
+  it('ignores absent cache values', () => {
+    expect(() => {
+      SUT.updateVesselsCache(undefined);
+      SUT.updateVesselsOfInterestCache(undefined as any);
+      SUT.updateWeightingCache(undefined as any);
+      SUT.updateConversionFactorCache(undefined as any);
+      SUT.updateSpeciesAliasesCache(undefined);
+    }).not.toThrow();
+  });
+});
+
 describe('getSpeciesAliases', () => {
 
   const mockSpeciesAliases: any = {
@@ -636,14 +648,13 @@ describe('getSpeciesRiskScore', () => {
   });
 
   it.each([
-    ['should return default value when undefined riskScore', 'COD', 1],
-    ['should return default value when missing riskScore', 'WHO', 1],
-    ['should return riskScore value when riskScore is a number', 'LBE', 1],
-    ['should return riskScore value when riskScore is a string valid number', 'HER', 1],
-    ['should return default value when riskScore string is a string not valid number', 'ALB', 1]
-  ])('%s', (_title, species, expectedScore) => {
-    const speciesRisk = SUT.getSpeciesRiskScore(species);
-    expect(speciesRisk).toBe(expectedScore);
+    { species: 'COD', scenario: 'undefined riskScore' },
+    { species: 'WHO', scenario: 'missing riskScore' },
+    { species: 'LBE', scenario: 'numeric riskScore' },
+    { species: 'HER', scenario: 'numeric string riskScore' },
+    { species: 'ALB', scenario: 'non-numeric riskScore string' },
+  ])('should return a score of 1 for $scenario', ({ species }) => {
+    expect(SUT.getSpeciesRiskScore(species)).toBe(1);
   });
 
   it('should return default value when species data does not exist', () => {
