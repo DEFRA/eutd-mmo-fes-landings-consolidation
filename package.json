@@ -67,7 +67,7 @@
         "@azure/storage-blob": "^12.31.0",
         "@hapi/basic": "^7.0.2",
         "@hapi/hapi": "^21.4.9",
-        "applicationinsights": "^3.17.0",
+        "applicationinsights": "2.9.8",
         "axios": "^1.17.0",
         "bunyan": "^1.8.15",
         "cross-env": "7.0.3",
