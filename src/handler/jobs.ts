@@ -92,12 +92,12 @@ export const jobsRoutes = (server: Server<ServerApplicationState>) => {
 					})
 				}
 			},
-			handler: async (req: Request, h: ResponseToolkit) => {
+			handler: (req: Request, h: ResponseToolkit) => {
 				try {
 					const { landings } = req.payload as IUpdateLandings;
 
 					logger.info(`[LANDING-CONSOLIDATION][UPDATING-LANDINGS][${landings.length}]`);
-					startLandingsConsolidationJob(landings);
+					void startLandingsConsolidationJob(landings);
 					logger.info(`[LANDING-CONSOLIDATION][UPDATING-LANDINGS][SUCCESS]`);
 					return h.response().code(202);
 				} catch (e) {
