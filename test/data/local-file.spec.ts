@@ -162,29 +162,29 @@ describe('loadVesselsDataFromLocalFile', () => {
     jest.restoreAllMocks();
   });
 
-  it('will call getVesselDataFromFile in file storage', async () => {
-    mockGetVesselData.mockResolvedValue('test');
+  it('will call getVesselDataFromFile in file storage', () => {
+    mockGetVesselData.mockReturnValue('test');
 
-    await loadVesselsDataFromLocalFile();
+    loadVesselsDataFromLocalFile();
 
     expect(mockGetVesselData).toHaveBeenCalled();
   });
 
-  it('will return data from file storage', async () => {
-    mockGetVesselData.mockResolvedValue('test');
+  it('will return data from file storage', () => {
+    mockGetVesselData.mockReturnValue('test');
 
-    const result = await loadVesselsDataFromLocalFile();
+    const result = loadVesselsDataFromLocalFile();
 
     expect(result).toBe('test');
   });
 
-  it('will log an error and return void if file storage throws an error', async () => {
+  it('will log an error and return void if file storage throws an error', () => {
 
     mockGetVesselData.mockImplementation(() => {
       throw 'something went wrong'
     });
 
-    const result = await loadVesselsDataFromLocalFile();
+    const result = loadVesselsDataFromLocalFile();
 
     expect(mockLoggerError).toHaveBeenCalled();
     expect(result).toBeUndefined();
