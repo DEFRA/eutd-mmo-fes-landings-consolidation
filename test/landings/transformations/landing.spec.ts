@@ -5,6 +5,19 @@ import * as Cache from '../../../src/data/cache';
 import * as PreApprovedDocument from '../../../src/landings/persistence/preApprovedDocument';
 import * as Risking from '../../../src/data/risking';
 
+const toProjectedDocuments = (documents: CatchCertificate[]): CatchCertificate[] =>
+  documents.map(document => ({
+    ...document,
+    exportData: {
+      products: document.exportData.products.map(({ speciesId, speciesCode, factor, caughtBy }) => ({
+        speciesId,
+        speciesCode,
+        factor,
+        caughtBy
+      }))
+    }
+  }));
+
 describe('when transforming landings', () => {
 
   it('should return a consoldated landing for LANDING_DECLARATION', () => {
@@ -1351,14 +1364,22 @@ describe('when uniquifying the landings', () => {
 describe('buildDocumentLandingsList without preApprovedMap', () => {
 
   let mockGetPreApprovedDocumentsMap: jest.SpyInstance;
+  let mockGetVesselsIdx: jest.SpyInstance;
 
   beforeEach(() => {
     mockGetPreApprovedDocumentsMap = jest.spyOn(PreApprovedDocument, 'getPreApprovedDocumentsMap');
     mockGetPreApprovedDocumentsMap.mockResolvedValue(new Map());
+    mockGetVesselsIdx = jest.spyOn(Cache, 'getVesselsIdx').mockReturnValue(generateIndex([{
+      registrationNumber: 'WA1',
+      fishingLicenceValidFrom: '2000-12-29T00:00:00',
+      fishingLicenceValidTo: '2100-12-20T00:00:00',
+      rssNumber: 'rssWA1'
+    }]));
   });
 
   afterEach(() => {
     mockGetPreApprovedDocumentsMap.mockRestore();
+    mockGetVesselsIdx.mockRestore();
   });
 
   it('should auto-fetch the approval map when preApprovedMap is not provided', async () => {
@@ -1377,5 +1398,70 @@ describe('buildDocumentLandingsList without preApprovedMap', () => {
 
     expect(mockGetPreApprovedDocumentsMap).toHaveBeenCalledWith(['CC1']);
     expect(result).toEqual([]);
+  });
+
+  it('skips documents without export data and products without caught landings', async () => {
+    const landing: ILandingDetail = { pln: 'WA1', dateLanded: '2023-10-09', rssNumber: 'rssWA1' };
+    const documents = [
+      { documentNumber: 'CC1' },
+      { documentNumber: 'CC2', exportData: { products: [{ speciesCode: 'COD', factor: 1 }] } }
+    ] as any;
+    const approvalMap = new Map<string, boolean>();
+
+    await expect(buildLandingsSpeciesIdx(documents, landing, approvalMap)).resolves.toEqual({});
+    await expect(buildDocumentLandingsList(documents, {}, approvalMap)).resolves.toEqual([]);
+  });
+
+  it('should build identical document landing lists for projected and full documents', async () => {
+    const documents: CatchCertificate[] = [{
+      status: "COMPLETE",
+      documentNumber: "CC1",
+      createdAt: new Date("2019-07-10T08:26:06.939Z"),
+      createdBy: "Bob",
+      createdByEmail: "foo@foo.com",
+      exportData: {
+        products: [{
+          speciesId: "CC1-1-COD",
+          speciesCode: "COD",
+          factor: 2,
+          state: { code: "FRE", name: "Fresh" },
+          presentation: { code: "WHL", name: "Whole" },
+          caughtBy: [{
+            id: "CC1-1",
+            vessel: "DAYBREAK",
+            pln: "WA1",
+            date: "2023-10-09",
+            weight: 100,
+            dataEverExpected: true,
+            landingDataExpectedDate: "2023-10-11",
+            landingDataEndDate: "2023-10-13"
+          }]
+        }],
+        exporterDetails: {
+          addressOne: '1 Street',
+          postcode: 'AB12 3CD',
+          exporterCompanyName: 'Company',
+          exporterFullName: 'Name',
+          _dynamicsAddress: {},
+          _dynamicsUser: {},
+          accountId: 'acc-1',
+          contactId: 'cont-1'
+        }
+      }
+    }];
+
+    const projectedDocuments = toProjectedDocuments(documents);
+    const preApprovedMap = new Map([['CC1', true]]);
+    const landingsIdx = {
+      'rssWA12023-10-09': {
+        rssNumber: 'rssWA1',
+        dateLanded: '2023-10-09'
+      }
+    };
+
+    const fullResult = await buildDocumentLandingsList(documents, landingsIdx, preApprovedMap);
+    const projectedResult = await buildDocumentLandingsList(projectedDocuments, landingsIdx, preApprovedMap);
+
+    expect(projectedResult).toStrictEqual(fullResult);
   });
 });

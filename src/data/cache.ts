@@ -64,7 +64,7 @@ export const loadFishCountriesAndSpecies = async () =>
 export const loadVessels = async () => {
   let vessels = undefined;
   if (appConfig.inDev) {
-    vessels = await loadVesselsDataFromLocalFile();
+    vessels = loadVesselsDataFromLocalFile();
   } else {
     const blobStorageConnStr = appConfig.blobStorageConnection;
     vessels = await loadVesselsData(blobStorageConnStr);

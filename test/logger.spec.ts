@@ -26,4 +26,11 @@ describe('logger', () => {
     const logger = require('../src/logger').default;
     expect(logger.fatal()).toBe(false);
   });
+
+  it('does not suppress fatal logs outside test mode', () => {
+    process.env.NODE_ENV = 'development';
+
+    const logger = require('../src/logger').default;
+    expect(logger.fatal()).toBe(true);
+  });
 });

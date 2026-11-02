@@ -86,11 +86,11 @@ export const consolidateLandings = async (consolidatedLandings: IConsolidateLand
     logger.info(`[LANDINGS-CONSOLIDATION][FOUND-PLN][${landingDetail.rssNumber}-${landingDetail.dateLanded}][PLN: ${landingDetail.pln}]`);
 
     //  b. get affected certs
-    const affectedCatchCerts: CatchCertificate[] = await getCatchCertificates({ pln: landingDetail.pln, dateLanded: landingDetail.dateLanded });
+    const affectedCatchCerts: CatchCertificate[] = await getCatchCertificates({ pln: landingDetail.pln, dateLanded: landingDetail.dateLanded }); // NOSONAR - sequential by design
     logger.info(`[LANDINGS-CONSOLIDATION][NUMBER-OF-CATCH-CERTIFICATE-REFERENCING][${landingDetail.dateLanded}-${landingDetail.pln}][${affectedCatchCerts.length}]`);
 
     // 2. go through each certificate and create a dictionary of landings indexable by species
-    const speciesIdxFromDocument: ILandingSpeciesIdx = await buildLandingsSpeciesIdx(affectedCatchCerts, landingDetail);
+    const speciesIdxFromDocument: ILandingSpeciesIdx = await buildLandingsSpeciesIdx(affectedCatchCerts, landingDetail); // NOSONAR - sequential by design
     logger.info(`[LANDINGS-CONSOLIDATION][NUMBER-OF-SPECIES-FOUND-ON-CATCH-CERTIFICATES][${landingDetail.dateLanded}-${landingDetail.pln}][${Object.keys(speciesIdxFromDocument).length}]`);
 
     // 3. iterate through all of the items to build landings array
@@ -134,7 +134,7 @@ export const consolidateLandings = async (consolidatedLandings: IConsolidateLand
       }
     }
 
-    await updateConsolidateLanding(consolidatedLanding)
+    await updateConsolidateLanding(consolidatedLanding) // NOSONAR - sequential by design to avoid concurrent writes
       .catch((e: Error) => logger.error(`[LANDINGS-CONSOLIDATION][UPDATE-LANDINGS][ERROR][${e}]`));
   }
 };

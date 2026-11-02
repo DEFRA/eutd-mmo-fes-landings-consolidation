@@ -12,7 +12,7 @@ export const getVesselsDataFromFile = (vesselsFilePath: string): IVessel[] => {
   }
 };
 
-export const loadVesselsDataFromLocalFile = async (vesselFilePath?: string): Promise<IVessel[] | undefined> => {
+export const loadVesselsDataFromLocalFile = (vesselFilePath?: string): IVessel[] | undefined => {
   const path = vesselFilePath || `${__dirname}/../../data/vessels.json`;
   try {
     return getVesselsDataFromFile(path);
