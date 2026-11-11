@@ -1,6 +1,6 @@
 import { connectTestMongo, disconnectTestMongo } from '../../helpers/mongoTestConnection';
 import { DocumentStatuses } from "mmo-shared-reference-data";
-import { isDocumentPreApproved } from '../../../src/landings/persistence/preApprovedDocument';
+import { getPreApprovedDocumentsMap, isDocumentPreApproved } from '../../../src/landings/persistence/preApprovedDocument';
 import { CatchCertificateModel, PreApprovedDocumentModel } from "../../../src/types";
 
 const preApproveDocument = async (documentNumber: string, exportData: string, user: string) => {
@@ -133,5 +133,28 @@ describe('Pre approved documents', () => {
       const result = await isDocumentPreApproved("");
       expect(result).toEqual(false);
     })
+  });
+
+  describe('When batch checking pre approved documents', () => {
+
+    it('should flag only documents that have certificate data', async () => {
+      await preApproveDocument('CC1', JSON.stringify({ products: [] }), 'Bob');
+      await PreApprovedDocumentModel.collection.insertOne({ documentNumber: 'CC2', certificateData: '', preApprovedBy: 'Bob' });
+      await PreApprovedDocumentModel.collection.insertOne({ documentNumber: 'CC3', preApprovedBy: 'Bob' });
+
+      const result = await getPreApprovedDocumentsMap(['CC1', 'CC2', 'CC3', 'CC4', 'CC1', '']);
+
+      expect(result.size).toBe(4);
+      expect(result.get('CC1')).toBe(true);
+      expect(result.get('CC2')).toBe(false);
+      expect(result.get('CC3')).toBe(false);
+      expect(result.get('CC4')).toBe(false);
+    });
+
+    it('should return an empty map when there are no document numbers', async () => {
+      const result = await getPreApprovedDocumentsMap([]);
+
+      expect(result.size).toBe(0);
+    });
   });
 });

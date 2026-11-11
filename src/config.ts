@@ -16,6 +16,8 @@ export class ApplicationConfig {
   public scheduleFishCountriesAndSpeciesJob: string;
   public scheduleVesselsDataJob: string;
   public catchCertificateFetchBatchSize: number;
+  public updateJobConcurrency: number;
+  public landingsJobConcurrency: number;
 
   private static parseBoolean(input: string | undefined, fallback: boolean): boolean {
     if (input === undefined) {
@@ -51,6 +53,8 @@ export class ApplicationConfig {
     ApplicationConfig.prototype.scheduleVesselsDataJob = env.REFRESH_VESSEL_JOB;
     ApplicationConfig.prototype.scheduleFishCountriesAndSpeciesJob = env.REFRESH_SPECIES_JOB;
     ApplicationConfig.prototype.catchCertificateFetchBatchSize = ApplicationConfig.parsePositiveInteger(env.CATCH_CERTIFICATE_FETCH_BATCH_SIZE, 5);
+    ApplicationConfig.prototype.updateJobConcurrency = ApplicationConfig.parsePositiveInteger(env.UPDATE_JOB_CONCURRENCY, 3);
+    ApplicationConfig.prototype.landingsJobConcurrency = ApplicationConfig.parsePositiveInteger(env.LANDINGS_JOB_CONCURRENCY, 1);
   }
 
 }
