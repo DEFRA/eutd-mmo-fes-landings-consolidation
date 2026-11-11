@@ -13,9 +13,15 @@ import {
 	IUpdateLandings
 } from '../types';
 import logger from '../logger';
+import appConfig from '../config';
+import { createConcurrencyLimiter } from '../services/concurrency-limiter';
 import { loadExporterBehaviour, loadFishCountriesAndSpecies } from '../data/cache';
 
 export const jobsRoutes = (server: Server<ServerApplicationState>) => {
+	// each run loads catch certificates into memory, so bound how many run at once
+	const limitUpdateJobs = createConcurrencyLimiter(appConfig.updateJobConcurrency);
+	const limitLandingsJobs = createConcurrencyLimiter(appConfig.landingsJobConcurrency);
+
 	server.route([
 		{
 			method: 'GET',
@@ -71,7 +77,7 @@ export const jobsRoutes = (server: Server<ServerApplicationState>) => {
 					const { documentNumber } = req.payload as IUpdateConsolidateLanding;
 
 					logger.info(`[LANDING-CONSOLIDATION][UPDATING-FOR][DOCUMENT][${documentNumber}]`);
-					await updateConsolidateLandings(documentNumber);
+					await limitUpdateJobs(() => updateConsolidateLandings(documentNumber));
 					logger.info(`[LANDING-CONSOLIDATION][UPDATING-FOR][DOCUMENT][${documentNumber}][SUCCESS]`);
 					return h.response().code(200);
 				} catch (e) {
@@ -97,7 +103,7 @@ export const jobsRoutes = (server: Server<ServerApplicationState>) => {
 					const { landings } = req.payload as IUpdateLandings;
 
 					logger.info(`[LANDING-CONSOLIDATION][UPDATING-LANDINGS][${landings.length}]`);
-					startLandingsConsolidationJob(landings).catch((e: unknown) =>
+					limitLandingsJobs(() => startLandingsConsolidationJob(landings)).catch((e: unknown) =>
 						logger.error(`[LANDINGS-CONSOLIDATION][UPDATING-LANDINGS][ERROR][${e}]`)
 					);
 					logger.info(`[LANDING-CONSOLIDATION][UPDATING-LANDINGS][SUCCESS]`);

@@ -253,7 +253,7 @@ export const updateConsolidateLandings = async (documentNumber: string) => {
 
   const aggregatedLandings: ILandingAggregated[] = aggregateOnLandingDate(landings);
 
-  const landingsIdx = aggregatedLandings.reduce((acc, cur) => ({ ...acc, [cur.rssNumber + cur.dateLanded]: cur }), {});
+  const landingsIdx = Object.fromEntries(aggregatedLandings.map((cur) => [cur.rssNumber + cur.dateLanded, cur]));
 
   logger.info(`[LANDING-CONSOLIDATION][DOCUMENT][${documentNumber}][LANDINGS-INDEXED]`);
 
@@ -275,7 +275,7 @@ export const updateConsolidateLandings = async (documentNumber: string) => {
 
     const aggregatedLanding: ILandingAggregated = landingsIdx[rssNumber + dateLanded];
     const landingSource = aggregatedLanding.items[0] ? aggregatedLanding.items[0].breakdown[0].source : undefined;
-    const landingWeightBySpecies = aggregatedLanding.items.reduce((acc, cur) => ({ ...acc, [cur.species]: { weight: cur.weight, source: cur.breakdown[0].source, isEstimate: cur.breakdown[0].isEstimate } }), {});
+    const landingWeightBySpecies = Object.fromEntries(aggregatedLanding.items.map((cur) => [cur.species, { weight: cur.weight, source: cur.breakdown[0].source, isEstimate: cur.breakdown[0].isEstimate }]));
 
     let consolidatedLanded: IConsolidateLanding = consolidatedLandingsByRssNumber.find((consolidatedLandingByRssNumber: IConsolidateLanding) => consolidatedLandingByRssNumber.rssNumber === rssNumber);
 
@@ -290,7 +290,7 @@ export const updateConsolidateLandings = async (documentNumber: string) => {
       }
     }
 
-    const itemsSpeciesIdx: { [key: string]: IConsolidateLandingItem } = consolidatedLanded.items.reduce((acc, cur) => ({ ...acc, [cur.species]: cur }), {});
+    const itemsSpeciesIdx: { [key: string]: IConsolidateLandingItem } = Object.fromEntries(consolidatedLanded.items.map((cur) => [cur.species, cur]));
 
     documentLandingsIdx[key].forEach((documentLanding: any) => {
       logger.info(`[LANDING-CONSOLIDATION][${rssNumber}-${dateLanded}][DOCUMENT][${documentNumber}][EXPORT-LANDING][${documentLanding.landingId}]`);
@@ -403,9 +403,9 @@ export const findAllCatchCertificates = async (landings: ILanding[]): Promise<Pr
     return acc;
   }, []);
 
-  const allCatchCertificates = await batches.reduce(async (accPromise: Promise<ProjectedCatchCertificate[]>, landingsBatch: ILanding[]) => {
-    const acc = await accPromise;
-    const batchResult = await Promise.all(
+  const allCatchCertificates: ProjectedCatchCertificate[] = [];
+  for (const landingsBatch of batches) {
+    const batchResult = await Promise.all( // NOSONAR - batches are sequential by design to bound memory and DB load
       landingsBatch.map(async (landing) => {
       const rssNumber = landing.rssNumber;
       const dateLanded = moment.utc(landing.dateTimeLanded).format('YYYY-MM-DD');
@@ -421,8 +421,12 @@ export const findAllCatchCertificates = async (landings: ILanding[]): Promise<Pr
       return affectedCatchCerts;
       })
     );
-    return [...acc, ...batchResult.flat()];
-  }, Promise.resolve([]));
+    for (const certificates of batchResult) {
+      for (const certificate of certificates) {
+        allCatchCertificates.push(certificate);
+      }
+    }
+  }
 
   logger.info(`[LANDINGS-CONSOLIDATION][TOTAL-NUMBER-OF-CATCH-CERTIFICATES][${allCatchCertificates.length}]`);
   return allCatchCertificates;
