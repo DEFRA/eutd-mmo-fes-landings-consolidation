@@ -2,7 +2,7 @@ const _ = require('lodash');
 
 import moment from 'moment';
 import { ILanding, ILandingItem, LandingSources, ILandingAggregatedItemBreakdown, ILandingQuery } from "mmo-shared-reference-data";
-import { Catch, CatchCertificate, IConsolidateLanding, ILandingDetail, ILandingSpeciesIdx, Product } from '../../types';
+import { IConsolidateLanding, ILandingDetail, ILandingSpeciesIdx, ProjectedCatchCertificate, ProjectedCatchCertificateCatch, ProjectedCatchCertificateProduct } from '../../types';
 import { getRssNumber } from '../../services/vessel.service';
 import { getPreApprovedDocumentsMap } from '../persistence/preApprovedDocument';
 import { getTotalRiskScore, isHighRisk } from '../../data/risking';
@@ -32,7 +32,7 @@ export const transformLandings = (landings: ILanding[]): IConsolidateLanding[] =
     })).value()
 
 // FI0-11132: accept optional pre-fetched approval map to avoid N+1 queries
-export const buildLandingsSpeciesIdx = async (documents: CatchCertificate[], landing: ILandingDetail, preApprovedMap?: Map<string, boolean>): Promise<ILandingSpeciesIdx> => {
+export const buildLandingsSpeciesIdx = async (documents: ProjectedCatchCertificate[], landing: ILandingDetail, preApprovedMap?: Map<string, boolean>): Promise<ILandingSpeciesIdx> => {
   const speciesIdx: ILandingSpeciesIdx = {};
 
   // If no map provided, batch-fetch all approvals upfront
@@ -43,11 +43,11 @@ export const buildLandingsSpeciesIdx = async (documents: CatchCertificate[], lan
   for (const document of documents) {
     if (document.exportData) {
       const isDocumentApproved = approvalMap.get(document.documentNumber) || false;
-      const products: Product[] = document.exportData.products;
-      products.forEach((product: Product) => {
+      const products = document.exportData.products;
+      products.forEach((product: ProjectedCatchCertificateProduct) => {
         if (product.caughtBy) {
-          const landings = product.caughtBy.filter((curr: Catch) => (curr.pln === landing.pln && moment.utc(curr.date).isSame(moment.utc(landing.dateLanded), 'day')));
-          landings.forEach((ctch: Catch) => {
+          const landings = product.caughtBy.filter((curr: ProjectedCatchCertificateCatch) => (curr.pln === landing.pln && moment.utc(curr.date).isSame(moment.utc(landing.dateLanded), 'day')));
+          landings.forEach((ctch: ProjectedCatchCertificateCatch) => {
             if (!Array.isArray(speciesIdx[product.speciesCode])) {
               speciesIdx[product.speciesCode] = [];
             }
@@ -73,7 +73,7 @@ export const buildLandingsSpeciesIdx = async (documents: CatchCertificate[], lan
 }
 
 // FI0-11132: accept optional pre-fetched approval map to avoid N+1 queries
-export const buildDocumentLandingsList = async (documents: CatchCertificate[], landingsIdx: any, preApprovedMap?: Map<string, boolean>): Promise<any[]> => {
+export const buildDocumentLandingsList = async (documents: ProjectedCatchCertificate[], landingsIdx: any, preApprovedMap?: Map<string, boolean>): Promise<any[]> => {
   const list: any[] = [];
 
   // If no map provided, batch-fetch all approvals upfront
@@ -84,9 +84,9 @@ export const buildDocumentLandingsList = async (documents: CatchCertificate[], l
   for (const document of documents) {
     const isDocumentApproved = approvalMap.get(document.documentNumber) || false;
     if (document.exportData) {
-      document.exportData.products.forEach((product: Product) => {
+      document.exportData.products.forEach((product: ProjectedCatchCertificateProduct) => {
         if (product.caughtBy) {
-          product.caughtBy.forEach((ctch: Catch) => {
+          product.caughtBy.forEach((ctch: ProjectedCatchCertificateCatch) => {
             const rssNumber = getRssNumber(ctch.pln, moment(ctch.date).format('YYYY-MM-DD'));
             if (landingsIdx[rssNumber + ctch.date]) {
               list.push({

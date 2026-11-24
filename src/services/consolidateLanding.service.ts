@@ -17,7 +17,8 @@ import {
   IConsolidateLanding,
   IConsolidateLandingItem,
   ILandingDetail,
-  ILandingSpeciesIdx
+  ILandingSpeciesIdx,
+  ProjectedCatchCertificate
 } from "../types";
 import {
   getRetrospectiveConsolidatedLandings,
@@ -34,6 +35,7 @@ import { isOverusedAllCerts } from "../landings/query/isOveruseAllCerts";
 import { isWithinDeminimus } from "../landings/query/isWithinDeminimus";
 import { getSpeciesAliases, refreshRiskingData } from "../data/cache";
 import { TOLERANCE_IN_KG, getLandingSource } from "../data/constants";
+import config from "../config";
 import logger from "../logger";
 
 const getSpeciesOnLanding: (species: string, speciesOnLanding: any) => any = (species: string, speciesOnLanding: any): any => {
@@ -86,7 +88,7 @@ export const consolidateLandings = async (consolidatedLandings: IConsolidateLand
     logger.info(`[LANDINGS-CONSOLIDATION][FOUND-PLN][${landingDetail.rssNumber}-${landingDetail.dateLanded}][PLN: ${landingDetail.pln}]`);
 
     //  b. get affected certs
-    const affectedCatchCerts: CatchCertificate[] = await getCatchCertificates({ pln: landingDetail.pln, dateLanded: landingDetail.dateLanded }); // NOSONAR - sequential by design
+    const affectedCatchCerts: ProjectedCatchCertificate[] = await getCatchCertificates({ pln: landingDetail.pln, dateLanded: landingDetail.dateLanded });
     logger.info(`[LANDINGS-CONSOLIDATION][NUMBER-OF-CATCH-CERTIFICATE-REFERENCING][${landingDetail.dateLanded}-${landingDetail.pln}][${affectedCatchCerts.length}]`);
 
     // 2. go through each certificate and create a dictionary of landings indexable by species
@@ -242,8 +244,7 @@ export const updateConsolidateLandings = async (documentNumber: string) => {
   await refreshRiskingData()
     .catch((e: Error) => logger.error(`[LANDING-CONSOLIDATION][${documentNumber}][REFRESH-RISKING-DATA][ERROR][${e}]`));
 
-  const allCatchCertificates: CatchCertificate[] = await findAllCatchCertificates(landings);
-  logger.info(`[LANDINGS-CONSOLIDATION][TOTAL-NUMBER-OF-CATCH-CERTIFICATES][${allCatchCertificates.length}]`);
+  const allCatchCertificates: ProjectedCatchCertificate[] = await findAllCatchCertificates(landings);
 
   // FI0-11132: batch-fetch all pre-approval statuses in one query instead of N+1
   const preApprovedMap = await getPreApprovedDocumentsMap(
@@ -252,7 +253,7 @@ export const updateConsolidateLandings = async (documentNumber: string) => {
 
   const aggregatedLandings: ILandingAggregated[] = aggregateOnLandingDate(landings);
 
-  const landingsIdx = aggregatedLandings.reduce((acc, cur) => ({ ...acc, [cur.rssNumber + cur.dateLanded]: cur }), {});
+  const landingsIdx = Object.fromEntries(aggregatedLandings.map((cur) => [cur.rssNumber + cur.dateLanded, cur]));
 
   logger.info(`[LANDING-CONSOLIDATION][DOCUMENT][${documentNumber}][LANDINGS-INDEXED]`);
 
@@ -274,7 +275,7 @@ export const updateConsolidateLandings = async (documentNumber: string) => {
 
     const aggregatedLanding: ILandingAggregated = landingsIdx[rssNumber + dateLanded];
     const landingSource = aggregatedLanding.items[0] ? aggregatedLanding.items[0].breakdown[0].source : undefined;
-    const landingWeightBySpecies = aggregatedLanding.items.reduce((acc, cur) => ({ ...acc, [cur.species]: { weight: cur.weight, source: cur.breakdown[0].source, isEstimate: cur.breakdown[0].isEstimate } }), {});
+    const landingWeightBySpecies = Object.fromEntries(aggregatedLanding.items.map((cur) => [cur.species, { weight: cur.weight, source: cur.breakdown[0].source, isEstimate: cur.breakdown[0].isEstimate }]));
 
     let consolidatedLanded: IConsolidateLanding = consolidatedLandingsByRssNumber.find((consolidatedLandingByRssNumber: IConsolidateLanding) => consolidatedLandingByRssNumber.rssNumber === rssNumber);
 
@@ -289,7 +290,7 @@ export const updateConsolidateLandings = async (documentNumber: string) => {
       }
     }
 
-    const itemsSpeciesIdx: { [key: string]: IConsolidateLandingItem } = consolidatedLanded.items.reduce((acc, cur) => ({ ...acc, [cur.species]: cur }), {});
+    const itemsSpeciesIdx: { [key: string]: IConsolidateLandingItem } = Object.fromEntries(consolidatedLanded.items.map((cur) => [cur.species, cur]));
 
     documentLandingsIdx[key].forEach((documentLanding: any) => {
       logger.info(`[LANDING-CONSOLIDATION][${rssNumber}-${dateLanded}][DOCUMENT][${documentNumber}][EXPORT-LANDING][${documentLanding.landingId}]`);
@@ -390,10 +391,22 @@ export const voidConsolidateLandings = async (documentNumber: string) => {
 
 };
 
-export const findAllCatchCertificates = async (landings: ILanding[]): Promise<CatchCertificate[]> => {
-  // FI0-10854: parallelize independent DB reads instead of sequential loop
-  const results = await Promise.all(
-    landings.map(async (landing) => {
+export const findAllCatchCertificates = async (landings: ILanding[]): Promise<ProjectedCatchCertificate[]> => {
+  const batchSize = config.catchCertificateFetchBatchSize && config.catchCertificateFetchBatchSize > 0
+    ? config.catchCertificateFetchBatchSize
+    : 5;
+
+  const batches = landings.reduce((acc: ILanding[][], _landing: ILanding, index: number) => {
+    if (index % batchSize === 0) {
+      acc.push(landings.slice(index, index + batchSize));
+    }
+    return acc;
+  }, []);
+
+  const allCatchCertificates: ProjectedCatchCertificate[] = [];
+  for (const landingsBatch of batches) {
+    const batchResult = await Promise.all( // NOSONAR - batches are sequential by design to bound memory and DB load
+      landingsBatch.map(async (landing) => {
       const rssNumber = landing.rssNumber;
       const dateLanded = moment.utc(landing.dateTimeLanded).format('YYYY-MM-DD');
 
@@ -403,13 +416,20 @@ export const findAllCatchCertificates = async (landings: ILanding[]): Promise<Ca
 
       logger.info(`[LANDINGS-CONSOLIDATION][FOUND-PLN][${landingDetail.rssNumber}-${landingDetail.dateLanded}][PLN: ${landingDetail.pln}]`);
 
-      const affectedCatchCerts: CatchCertificate[] = await getCatchCertificates({ pln: landingDetail.pln, dateLanded: landingDetail.dateLanded });
+      const affectedCatchCerts: ProjectedCatchCertificate[] = await getCatchCertificates({ pln: landingDetail.pln, dateLanded: landingDetail.dateLanded });
       logger.info(`[LANDINGS-CONSOLIDATION][NUMBER-OF-CATCH-CERTIFICATE-REFERENCING][${rssNumber}-${dateLanded}][${affectedCatchCerts.length}]`);
       return affectedCatchCerts;
-    })
-  );
+      })
+    );
+    for (const certificates of batchResult) {
+      for (const certificate of certificates) {
+        allCatchCertificates.push(certificate);
+      }
+    }
+  }
 
-  return results.flat();
+  logger.info(`[LANDINGS-CONSOLIDATION][TOTAL-NUMBER-OF-CATCH-CERTIFICATES][${allCatchCertificates.length}]`);
+  return allCatchCertificates;
 };
 
 export const getLandingsRefresh = async (): Promise<ILandingDetail[]> => {

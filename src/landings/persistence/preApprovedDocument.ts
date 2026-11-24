@@ -4,12 +4,15 @@ import logger from "../../logger";
 export const isDocumentPreApproved = async (documentNumber: string) => {
   if (!documentNumber) return false;
 
-  const preApprovedDocument = await PreApprovedDocumentModel.findOne({ documentNumber }, null, { lean: true });
+  const preApprovedDocument = await PreApprovedDocumentModel.findOne(
+    { documentNumber, certificateData: { $nin: [null, ''] } },
+    { documentNumber: 1, _id: 0 },
+    { lean: true }
+  );
 
-  if (preApprovedDocument?.certificateData) {
-    const isPreApproved = !!preApprovedDocument.certificateData
-    logger.info(`[LANDINGS-CONSOLIDATION][PREAPPROVAL-CHECK][${documentNumber}][${isPreApproved}]`);
-    return isPreApproved;
+  if (preApprovedDocument) {
+    logger.info(`[LANDINGS-CONSOLIDATION][PREAPPROVAL-CHECK][${documentNumber}][true]`);
+    return true;
   } else {
     logger.info(`[LANDINGS-CONSOLIDATION][PREAPPROVAL-CHECK][${documentNumber}][NOT-FOUND]`);
     return false;
@@ -23,15 +26,18 @@ export const getPreApprovedDocumentsMap = async (documentNumbers: string[]): Pro
 
   if (uniqueNumbers.length === 0) return result;
 
+  // certificateData holds the full serialised certificate; only its presence is needed, so filter
+  // in the database and project documentNumber alone to avoid pulling every payload into memory
   const preApprovedDocuments = await PreApprovedDocumentModel.find(
-    { documentNumber: { $in: uniqueNumbers } },
-    null,
+    { documentNumber: { $in: uniqueNumbers }, certificateData: { $nin: [null, ''] } },
+    { documentNumber: 1, _id: 0 },
     { lean: true }
   );
 
+  const preApprovedNumbers = new Set<string>(preApprovedDocuments.map((doc: any) => doc.documentNumber));
+
   for (const docNum of uniqueNumbers) {
-    const match = preApprovedDocuments.find((doc: any) => doc.documentNumber === docNum);
-    const isPreApproved = !!(match?.certificateData);
+    const isPreApproved = preApprovedNumbers.has(docNum);
     result.set(docNum, isPreApproved);
     logger.info(`[LANDINGS-CONSOLIDATION][PREAPPROVAL-CHECK-BATCH][${docNum}][${isPreApproved}]`);
   }

@@ -129,6 +129,32 @@ export interface CatchCertificate {
   contactId?: string;
 }
 
+export interface ProjectedCatchCertificateCatch {
+  id: string;
+  pln?: string;
+  date?: string;
+  weight?: number;
+  dataEverExpected?: boolean;
+  landingDataExpectedDate?: string;
+  landingDataEndDate?: string;
+}
+
+export interface ProjectedCatchCertificateProduct {
+  speciesCode?: string;
+  factor?: number;
+  caughtBy?: ProjectedCatchCertificateCatch[];
+}
+
+export interface ProjectedCatchCertificateExportData {
+  products: ProjectedCatchCertificateProduct[];
+  exporterDetails?: Pick<CcExporterDetails, 'accountId' | 'contactId'>;
+}
+
+export interface ProjectedCatchCertificate {
+  documentNumber: string;
+  exportData?: ProjectedCatchCertificateExportData;
+}
+
 export interface Audit {
   operation: string,
   at: string
